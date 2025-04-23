@@ -1,0 +1,239 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Project Architecture and Conventions
+
+This document outlines the architecture, design patterns, and conventions used in the Bedaya application. It's intended to guide future development and ensure consistency across the codebase.
+
+## Application Structure
+
+```
+src/
+├── app/                 # Next.js App Router pages and layouts
+│   ├── (auth)/          # Authentication-related pages (login, register)
+│   ├── api/             # API routes
+│   ├── dashboard/       # Protected/authenticated routes
+│   ├── globals.css      # Global styles
+│   ├── layout.tsx       # Root layout
+│   └── page.tsx         # Homepage
+├── types/               # TypeScript type definitions
+│   └── User.ts          # User interface definitions
+├── models/              # Mongoose schema models
+│   └── User.ts          # User schema (references types)
+├── services/            # Business logic services
+│   └── userService.ts   # User-related operations
+├── lib/                 # Utility functions and libraries
+│   └── db.ts            # Database connection
+├── providers/           # React context providers
+│   ├── AuthProvider.tsx # Auth session provider
+│   └── AntdRegistry.tsx # Ant Design registry setup
+├── auth.ts              # NextAuth configuration
+└── middleware.ts        # Route protection middleware
+```
+
+## Design Patterns and Conventions
+
+### 1. Separation of Concerns
+
+The project follows a clear separation of concerns:
+
+- **Types**: Define the shape of data using TypeScript interfaces
+- **Models**: Define database schemas referencing the types
+- **Services**: Implement business logic and database operations
+- **API Routes**: Handle HTTP requests using services
+- **UI Components**: Present data and handle user interactions
+- **Providers**: Set up application context and configuration
+
+### 2. Type Definitions
+
+All type definitions should be placed in the `src/types` directory:
+
+```typescript
+// Example: src/types/User.ts
+export interface IUser extends Document {
+  email: string;
+  password: string;
+  name?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### 3. Mongoose Models
+
+Models reference type definitions and define the database schema:
+
+```typescript
+// Example: src/models/User.ts
+import { IUser } from '@/types/User';
+import mongoose, { Schema } from 'mongoose';
+
+const UserSchema = new Schema<IUser>({
+  // Schema definition
+});
+
+const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+export default User;
+```
+
+### 4. Service Layer
+
+Services implement business logic and handle data operations:
+
+```typescript
+// Example: src/services/userService.ts
+import User from '@/models/User';
+import { IUser } from '@/types/User';
+import { connectToDatabase } from '@/lib/db';
+
+export const userService = {
+  async findByEmail(email: string): Promise<IUser | null> {
+    await connectToDatabase();
+    return User.findOne({ email }).exec();
+  },
+  // More methods...
+};
+```
+
+Benefits:
+- Centralizes business logic
+- Makes code more testable
+- Provides a clean API for components and routes
+
+### 5. API Routes
+
+API routes use services to handle requests:
+
+```typescript
+// Example: src/app/api/resource/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { someService } from '@/services/someService';
+
+export async function POST(req: NextRequest) {
+  try {
+    const data = await req.json();
+    const result = await someService.operation(data);
+    return NextResponse.json(result, { status: 201 });
+  } catch (error) {
+    // Error handling
+  }
+}
+```
+
+### 6. Authentication
+
+Authentication uses NextAuth.js with credentials provider:
+
+- Configuration in `src/auth.ts`
+- API route in `src/app/api/auth/[...nextauth]/route.ts`
+- Provider in `src/providers/AuthProvider.tsx`
+
+### 7. UI Components
+
+- Client components must use the 'use client' directive
+- Organized by feature in the app directory
+- Auth-related routes in `(auth)` group
+- Protected routes in feature-specific directories
+
+### 8. Type Casting for Mongoose
+
+When accessing Mongoose document properties like `_id`, use type casting:
+
+```typescript
+// For MongoDB _id access
+const typedUser = user as IUser & { _id: { toString: () => string } };
+```
+
+## Adding New Features
+
+When adding new features:
+
+1. Define types in `src/types/[FeatureName].ts`
+2. Create Mongoose models in `src/models/[FeatureName].ts`
+3. Implement business logic in `src/services/[featureName]Service.ts`
+4. Add API routes in `src/app/api/[feature-name]/route.ts`
+5. Create UI pages/components in appropriate app directory
+
+### Example: Adding a Post Feature
+
+1. Create `src/types/Post.ts`:
+```typescript
+export interface IPost extends Document {
+  title: string;
+  content: string;
+  author: mongoose.Types.ObjectId | IUser;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+2. Create `src/models/Post.ts`:
+```typescript
+import { IPost } from '@/types/Post';
+import mongoose, { Schema } from 'mongoose';
+
+const PostSchema = new Schema<IPost>({
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+}, { timestamps: true });
+
+const Post = mongoose.models.Post || mongoose.model<IPost>('Post', PostSchema);
+export default Post;
+```
+
+3. Create `src/services/postService.ts`:
+```typescript
+import Post from '@/models/Post';
+import { IPost } from '@/types/Post';
+import { connectToDatabase } from '@/lib/db';
+
+export const postService = {
+  async create(postData): Promise<IPost> {
+    await connectToDatabase();
+    const post = new Post(postData);
+    return post.save();
+  },
+  async findById(id: string): Promise<IPost | null> {
+    await connectToDatabase();
+    return Post.findById(id).populate('author').exec();
+  },
+  // More methods...
+};
+```
+
+4. Create API routes in `src/app/api/posts/route.ts` and `src/app/api/posts/[id]/route.ts`
+
+5. Create UI components in `src/app/posts/`
+
+## Error Handling
+
+- Services should throw specific errors
+- API routes should catch errors and return appropriate status codes
+- UI components should handle and display errors to users
+
+## Database Connections
+
+- Always use the `connectToDatabase()` utility from `src/lib/db.ts`
+- This ensures proper connection pooling and error handling
+
+## Authentication and Authorization
+
+- Protected routes are handled by the middleware in `src/middleware.ts`
+- Session data is available through `useSession()` hook from NextAuth
+- Use the middleware's matcher to include new protected routes
+
+## Styling Conventions
+
+- Use Ant Design components for UI elements
+- Wrap the application with AntdRegistry for proper styling
+- Use Tailwind CSS for custom styling and layout
+
+## Performance Considerations
+
+- Use server components when possible
+- Add 'use client' only when necessary
+- Use appropriate data fetching methods based on requirements
+- Consider caching strategies for frequently accessed data
