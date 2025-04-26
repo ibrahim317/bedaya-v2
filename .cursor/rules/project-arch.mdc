@@ -13,8 +13,8 @@ This document outlines the architecture, design patterns, and conventions used i
 src/
 ├── app/                 # Next.js App Router pages and layouts
 │   ├── (auth)/          # Authentication-related pages (login, register)
+│   ├── (main)/          # Protected/authenticated routes (main routes for the applications)
 │   ├── api/             # API routes
-│   ├── dashboard/       # Protected/authenticated routes
 │   ├── globals.css      # Global styles
 │   ├── layout.tsx       # Root layout
 │   └── page.tsx         # Homepage
@@ -24,6 +24,9 @@ src/
 │   └── User.ts          # User schema (references types)
 ├── services/            # Business logic services
 │   └── userService.ts   # User-related operations
+├── componenets/         # React Components for reusability
+│   ├── dashboard/       # Dashboard related components (recursively)
+│   └── Header.tsx       # Components shared for all the application
 ├── lib/                 # Utility functions and libraries
 │   └── db.ts            # Database connection
 ├── providers/           # React context providers
