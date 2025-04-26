@@ -15,15 +15,15 @@ const StyledComponentsRegistry = ({ children }: React.PropsWithChildren) => {
 
   return (
     <StyleProvider cache={cache}>
-      {mounted ? children : null}
-      {/* Extract style on server side */}
-      {typeof window === 'undefined' && (
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `</script>${extractStyle(cache)}<script>`,
-          }}
-        />
-      )}
+        {mounted ? children : null}
+        {/* Extract style on server side */}
+        {typeof window === 'undefined' && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `</script>${extractStyle(cache)}<script>`,
+            }}
+          />
+        )}
     </StyleProvider>
   );
 };

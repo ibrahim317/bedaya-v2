@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Form, Input, Button, Typography, Card, Divider, Alert } from 'antd';
+import { Form, Input, Button, Typography, Card, Divider, Alert, message } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { usersClient } from '@/clients/usersClient';
 
 const { Title, Text } = Typography;
 
@@ -16,28 +17,37 @@ export default function LoginPage() {
     searchParams.get('error') || null
   );
   const [loading, setLoading] = useState(false);
+  const [messageApi] = message.useMessage();
 
   const onFinish = async (values: { email: string; password: string }) => {
     try {
       setLoading(true);
       setError(null);
 
-      const result = await signIn('credentials', {
-        redirect: false,
+      const response = await signIn('credentials', {
         email: values.email,
         password: values.password,
+        redirect: false,
       });
 
-      if (result?.error) {
-        setError(result.error);
+      if (response?.error === 'CredentialsSignin') {
+        setError('Invalid email or password');
         return;
       }
 
-      // Redirect to dashboard on successful login
+      if (response?.error === 'UserNotVerified') {
+        setError('Your account is pending verification by an admin');
+        return;
+      }
+
+      if (response?.error) {
+        setError(response.error);
+        return;
+      }
+
       router.push('/dashboard');
-      router.refresh();
-    } catch {
-      setError('An unexpected error occurred');
+    } catch (error) {
+      messageApi.error('An error occurred during login');
     } finally {
       setLoading(false);
     }

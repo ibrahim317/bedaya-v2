@@ -22,11 +22,11 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <AntdRegistry>
           <ThemeProvider>
-            <AuthProvider>
+          <AuthProvider>
               {children}
             </AuthProvider>
           </ThemeProvider>
-        </AntdRegistry>
+            </AntdRegistry>
       </body>
     </html>
   );

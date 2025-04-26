@@ -18,6 +18,10 @@ const UserSchema = new Schema<IUser>(
       default: 'user',
       enum: ['admin', 'user'],
     },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
     password: {
       type: String,
       required: [true, 'Password is required'],
@@ -33,7 +37,6 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-// Check if model already exists to prevent overwriting during hot reloads
 const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 
 export default User; 

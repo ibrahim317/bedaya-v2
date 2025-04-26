@@ -1,9 +1,11 @@
-// Define the interface for the User document
-export interface IUser extends Document {
+// Define the interface for User data
+export interface IUser {
+  _id: string;
   email: string;
   password: string;
   name?: string;
-  role: string;
+  role: 'admin' | 'user';
+  verified: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

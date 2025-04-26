@@ -1,15 +1,21 @@
 import NextAuth from 'next-auth';
-import type { DefaultSession, Session, User } from 'next-auth';
+import type { DefaultSession, NextAuthOptions, User as NextAuthUser } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { userService } from '@/services/userService';
 import type { Document } from 'mongoose';
+import bcrypt from 'bcrypt';
+import { connectToDatabase } from '@/lib/db';
+import User from '@/models/User';
 
 // Define the shape of our database User type
 interface MongoUser extends Document {
   _id: { toString(): string };
   email: string;
   name?: string;
+  role?: string;
+  password: string;
+  verified: boolean;
 }
 
 // Extend the session user type
@@ -17,11 +23,15 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
+      email: string;
+      name: string;
+      role: string;
+      verified: boolean;
     } & DefaultSession['user']
   }
 }
 
-const authConfig = {
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -31,24 +41,31 @@ const authConfig = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and password are required');
+          throw new Error('Please enter your email and password');
         }
 
-        const user = await userService.verifyCredentials({
-          email: credentials.email,
-          password: credentials.password,
-        });
+        await connectToDatabase();
+        const user = await User.findOne({ email: credentials.email });
 
         if (!user) {
           throw new Error('Invalid email or password');
         }
 
-        // Convert MongoDB document to NextAuth User
-        const dbUser = user as unknown as MongoUser;
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isValid) {
+          throw new Error('Invalid email or password');
+        }
+
+        if (user.verified === false) {
+          throw new Error('UserNotVerified');
+        }
+
         return {
-          id: dbUser._id.toString(),
-          email: dbUser.email,
-          name: dbUser.name || '',
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          verified: user.verified,
         };
       },
     }),
@@ -62,26 +79,21 @@ const authConfig = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user: User | undefined }) {
+    async jwt({ token, user }: { token: JWT, user: NextAuthUser & { role?: string, verified?: boolean } }) {
       if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.name = user.name;
+        token.role = user.role;
+        token.verified = user.verified;
       }
       return token;
     },
-    async session({ session, token }: { session: Session; token: JWT }): Promise<Session> {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.id as string,
-          email: token.email as string,
-          name: token.name as string,
-        },
-      };
+    async session({ session, token }) {
+      if (session?.user) {
+        session.user.role = token.role as string;
+        session.user.verified = token.verified as boolean;
+      }
+      return session;
     },
   },
 };
 
-export default NextAuth(authConfig); 
+export default NextAuth(authOptions); 

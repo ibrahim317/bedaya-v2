@@ -46,7 +46,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout style={{ height: "100vh" }}>
       <Sidebar
         collapsed={collapsed}
         mobileView={mobileView}
@@ -62,7 +62,9 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           setCollapsed={setCollapsed}
           handleSignOut={handleSignOut}
         />
-        <Content className="p-6">{children}</Content>
+        <Content className="p-6 overflow-auto" style={{ height: "calc(100vh - 64px)" }}>
+          {children}
+        </Content>
       </Layout>
     </Layout>
   );
