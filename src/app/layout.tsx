@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import "./globals.css";
 import AuthProvider from "@/providers/AuthProvider";
 import AntdRegistry from "@/providers/AntdRegistry";
+import { ConfigProvider } from 'antd';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,11 +20,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
-        <AuthProvider>
-          <AntdRegistry>
-            {children}
-          </AntdRegistry>
-        </AuthProvider>
+        <ConfigProvider
+          theme={{
+            token: {
+              colorPrimary: '#4CAF50',
+            },
+          }}
+        >
+          <AuthProvider>
+            <AntdRegistry>
+              {children}
+            </AntdRegistry>
+          </AuthProvider>
+        </ConfigProvider>
       </body>
     </html>
   );
