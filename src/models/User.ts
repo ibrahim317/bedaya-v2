@@ -13,6 +13,11 @@ const UserSchema = new Schema<IUser>(
       trim: true,
       lowercase: true,
     },
+    role: {
+      type: String,
+      default: 'user',
+      enum: ['admin', 'user'],
+    },
     password: {
       type: String,
       required: [true, 'Password is required'],

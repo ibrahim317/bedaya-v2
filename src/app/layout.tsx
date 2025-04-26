@@ -3,13 +3,13 @@ import { Inter } from 'next/font/google';
 import "./globals.css";
 import AuthProvider from "@/providers/AuthProvider";
 import AntdRegistry from "@/providers/AntdRegistry";
-import { ConfigProvider } from 'antd';
+import ThemeProvider from "@/providers/ThemeProvider";
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Bedaya Authentication App",
-  description: "Authentication app with NextAuth and Mongoose",
+  title: "Bedaya Patient Management System",
+  description: "Bedaya Patient Management System",
 };
 
 export default function RootLayout({
@@ -20,19 +20,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
-        <ConfigProvider
-          theme={{
-            token: {
-              colorPrimary: '#4CAF50',
-            },
-          }}
-        >
-          <AuthProvider>
-            <AntdRegistry>
+        <AntdRegistry>
+          <ThemeProvider>
+            <AuthProvider>
               {children}
-            </AntdRegistry>
-          </AuthProvider>
-        </ConfigProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </AntdRegistry>
       </body>
     </html>
   );

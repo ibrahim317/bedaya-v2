@@ -1,18 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Typography, Button, Card, Descriptions, message } from 'antd';
-import { LogoutOutlined } from '@ant-design/icons';
-import { useSession, signOut } from 'next-auth/react';
+import { Typography, Card, Descriptions } from 'antd';
+import { useSession } from 'next-auth/react';
 
 const { Title } = Typography;
 
 export default function DashboardPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [messageApi, contextHolder] = message.useMessage();
-  const [loading, setLoading] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -21,18 +18,6 @@ export default function DashboardPage() {
     }
   }, [status, router]);
 
-  const handleSignOut = async () => {
-    try {
-      setLoading(true);
-      await signOut({ redirect: false });
-      messageApi.success('You have been successfully logged out');
-      router.push('/login');
-    } catch {
-      messageApi.error('Failed to sign out');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (status === 'loading') {
     return (
@@ -46,18 +31,8 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-4xl mx-auto ">
-      {contextHolder}
       <div className="flex justify-between items-center mb-8">
         <Title level={2}>Dashboard</Title>
-        <Button
-          type="primary"
-          danger
-          icon={<LogoutOutlined />}
-          onClick={handleSignOut}
-          loading={loading}
-        >
-          Sign Out
-        </Button>
       </div>
 
       <Card title="Your Information" className="mb-6">
