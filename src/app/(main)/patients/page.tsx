@@ -1,9 +1,246 @@
-import React from 'react'
+"use client";
 
-const page = () => {
-  return (
-    <div>page</div>
-  )
+import { useCallback, useState, useEffect } from "react";
+import { Table, Input, Button, Card, App } from "antd";
+import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
+import { useRouter } from "next/navigation";
+import { fetchPatients } from "@/clients/patient";
+import { PatientType } from "@/types/Patient";
+import dayjs from "dayjs";
+
+const { Search } = Input;
+
+interface TableParams {
+  search: string;
+  sortField: string;
+  sortOrder: "ascend" | "descend" | null;
+  page: number;
+  pageSize: number;
 }
 
-export default page
+const PatientListPage = () => {
+  const router = useRouter();
+  const { message } = App.useApp();
+  const [loading, setLoading] = useState({ adult: false, child: false });
+  const [data, setData] = useState({ adult: [], child: [] });
+  const [pagination, setPagination] = useState({
+    adult: { current: 1, pageSize: 10, total: 0 },
+    child: { current: 1, pageSize: 10, total: 0 },
+  });
+
+  const [tableParams, setTableParams] = useState<{
+    adult: TableParams;
+    child: TableParams;
+  }>({
+    adult: {
+      search: "",
+      sortField: "createdAt",
+      sortOrder: "descend",
+      page: 1,
+      pageSize: 10,
+    },
+    child: {
+      search: "",
+      sortField: "createdAt",
+      sortOrder: "descend",
+      page: 1,
+      pageSize: 10,
+    },
+  });
+
+  const fetchTableData = useCallback(
+    async (type: "adult" | "child") => {
+      try {
+        setLoading({ ...loading, [type]: true });
+        const params = tableParams[type];
+        
+        const response = await fetchPatients({
+          type: type === "adult" ? PatientType.Adult : PatientType.Child,
+          search: params.search,
+          sortField: params.sortField,
+          sortOrder: params.sortOrder === "ascend" ? "asc" : "desc",
+          page: params.page,
+          pageSize: params.pageSize,
+        });
+
+        setData((prev) => ({ ...prev, [type]: response.data }));
+        setPagination((prev) => ({
+          ...prev,
+          [type]: {
+            ...prev[type],
+            total: response.pagination.total,
+          },
+        }));
+      } catch (error) {
+        message.error("Failed to fetch patients");
+      } finally {
+        setLoading({ ...loading, [type]: false });
+      }
+    },
+    [tableParams, message]
+  );
+
+  const handleTableChange = (
+    type: "adult" | "child",
+    pagination: any,
+    filters: any,
+    sorter: any
+  ) => {
+    setTableParams((prev) => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        page: pagination.current,
+        pageSize: pagination.pageSize,
+        sortField: sorter.field || "createdAt",
+        sortOrder: sorter.order || "descend",
+      },
+    }));
+  };
+
+  const handleSearch = (type: "adult" | "child", value: string) => {
+    setTableParams((prev) => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        search: value,
+        page: 1,
+      },
+    }));
+  };
+
+  const columns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      sorter: true,
+      width: "20%",
+    },
+    {
+      title: "Code",
+      dataIndex: "code",
+      sorter: true,
+      width: "15%",
+    },
+    {
+      title: "Sex",
+      dataIndex: "sex",
+      width: "10%",
+    },
+    {
+      title: "Age",
+      dataIndex: "age",
+      sorter: true,
+      width: "10%",
+    },
+    {
+      title: "Mobile",
+      dataIndex: "mobileNumber",
+      width: "15%",
+    },
+    {
+      title: "Day",
+      dataIndex: "checkupDay",
+      width: "10%",
+    },
+    {
+      title: "Created At",
+      dataIndex: "createdAt",
+      sorter: true,
+      width: "20%",
+      render: (date: string) => dayjs(date).format("YYYY-MM-DD HH:mm"),
+    },
+  ];
+
+  useEffect(() => {
+    fetchTableData("adult");
+  }, [
+    tableParams.adult.search,
+    tableParams.adult.sortField,
+    tableParams.adult.sortOrder,
+    tableParams.adult.page,
+    tableParams.adult.pageSize,
+  ]);
+
+  useEffect(() => {
+    fetchTableData("child");
+  }, [
+    tableParams.child.search,
+    tableParams.child.sortField,
+    tableParams.child.sortOrder,
+    tableParams.child.page,
+    tableParams.child.pageSize,
+  ]);
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Adult Patients */}
+      <Card
+        title="Adult Patients"
+        extra={
+          <div className="flex gap-4">
+            <Search
+              placeholder="Search patients..."
+              allowClear
+              onSearch={(value) => handleSearch("adult", value)}
+              style={{ width: 250 }}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => router.push("/patients/create-adult")}
+            >
+              Add Adult Patient
+            </Button>
+          </div>
+        }
+      >
+        <Table
+          columns={columns}
+          rowKey="_id"
+          dataSource={data.adult}
+          pagination={pagination.adult}
+          loading={loading.adult}
+          onChange={(pagination, filters, sorter) =>
+            handleTableChange("adult", pagination, filters, sorter)
+          }
+        />
+      </Card>
+
+      {/* Child Patients */}
+      <Card
+        title="Child Patients"
+        extra={
+          <div className="flex gap-4">
+            <Search
+              placeholder="Search patients..."
+              allowClear
+              onSearch={(value) => handleSearch("child", value)}
+              style={{ width: 250 }}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => router.push("/patients/create-child")}
+            >
+              Add Child Patient
+            </Button>
+          </div>
+        }
+      >
+        <Table
+          columns={columns}
+          rowKey="_id"
+          dataSource={data.child}
+          pagination={pagination.child}
+          loading={loading.child}
+          onChange={(pagination, filters, sorter) =>
+            handleTableChange("child", pagination, filters, sorter)
+          }
+        />
+      </Card>
+    </div>
+  );
+};
+
+export default PatientListPage;

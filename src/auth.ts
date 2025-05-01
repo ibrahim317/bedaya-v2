@@ -5,7 +5,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { userService } from '@/services/userService';
 import type { Document } from 'mongoose';
 import bcrypt from 'bcrypt';
-import { connectToDatabase } from '@/lib/db';
+import { connectDB } from '@/lib/db';
 import User from '@/models/User';
 
 // Define the shape of our database User type
@@ -44,7 +44,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Please enter your email and password');
         }
 
-        await connectToDatabase();
+        await connectDB();
         const user = await User.findOne({ email: credentials.email });
 
         if (!user) {

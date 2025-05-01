@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/auth';
-import { connectToDatabase } from '@/lib/db';
+import { connectDB } from '@/lib/db';
 import User from '@/models/User';
 
 export async function PATCH() {
@@ -15,7 +15,7 @@ export async function PATCH() {
       );
     }
 
-    await connectToDatabase();
+    await connectDB();
 
     // Update all unverified users
     const result = await User.updateMany(

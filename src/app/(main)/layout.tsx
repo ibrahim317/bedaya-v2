@@ -62,7 +62,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           setCollapsed={setCollapsed}
           handleSignOut={handleSignOut}
         />
-        <Content className="p-6 overflow-auto" style={{ height: "calc(100vh - 64px)" }}>
+        <Content className="overflow-auto" style={{ height: "calc(100vh - 64px)" }}>
           {children}
         </Content>
       </Layout>

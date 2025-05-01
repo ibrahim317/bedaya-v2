@@ -1,4 +1,4 @@
-import { Schema, model, Model } from "mongoose";
+import { Schema, model, Model, models } from "mongoose";
 import {
   IPatient,
   MedicalHistory,
@@ -376,7 +376,8 @@ const PatientSchema: Schema<IPatient> = new Schema(
   { timestamps: true }
 );
 
-export const Patient: Model<IPatient> = model<IPatient>(
-  "Patient",
-  PatientSchema
-);
+// Handle hot reloading
+const Patient = (models.Patient as Model<IPatient>) || model<IPatient>("Patient", PatientSchema);
+
+export { Patient };
+

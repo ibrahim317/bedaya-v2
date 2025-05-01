@@ -61,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       breakpoint="md"
       onBreakpoint={onBreakpoint}
       trigger={null}
-      collapsedWidth={80}
+      collapsedWidth={60}
     >
       {sidebarContent}
     </Sider>

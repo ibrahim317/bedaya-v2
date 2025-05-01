@@ -4,6 +4,7 @@ import "./globals.css";
 import AuthProvider from "@/providers/AuthProvider";
 import AntdRegistry from "@/providers/AntdRegistry";
 import ThemeProvider from "@/providers/ThemeProvider";
+import { App as AntApp } from 'antd';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,11 +23,11 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <AntdRegistry>
           <ThemeProvider>
-          <AuthProvider>
-              {children}
+            <AuthProvider>
+              <AntApp>{children}</AntApp>
             </AuthProvider>
           </ThemeProvider>
-            </AntdRegistry>
+        </AntdRegistry>
       </body>
     </html>
   );

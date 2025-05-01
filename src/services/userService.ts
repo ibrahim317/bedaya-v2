@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import User from '@/models/User';
 import { IUser } from '@/types/User';
-import { connectToDatabase } from '@/lib/db';
+import { connectDB } from '@/lib/db';
 
 export interface RegisterUserData {
   email: string;
@@ -22,7 +22,7 @@ export const userService = {
    * Find all users
    */
   async findAll(): Promise<IUser[]> {
-    await connectToDatabase();
+    await connectDB();
     const users = await User.find().select('-password').lean();
     return users as unknown as IUser[];
   },
@@ -31,7 +31,7 @@ export const userService = {
    * Delete a user by ID
    */
   async deleteUser(userId: string): Promise<void> {
-    await connectToDatabase();
+    await connectDB();
     await User.findByIdAndDelete(userId);
   },
 
@@ -39,7 +39,7 @@ export const userService = {
    * Toggle user admin status
    */
   async toggleAdminStatus(userId: string, setAdmin: boolean): Promise<IUser | null> {
-    await connectToDatabase();
+    await connectDB();
     
     const role = setAdmin ? 'admin' : 'user';
     console.log('[DEBUG] Attempting to update user:', userId, 'New role:', role);
@@ -71,7 +71,7 @@ export const userService = {
    * Find a user by email
    */
   async findByEmail(email: string): Promise<IUser | null> {
-    await connectToDatabase();
+    await connectDB();
     const user = await User.findOne({ email }).lean();
     return user as IUser | null;
   },
@@ -80,7 +80,7 @@ export const userService = {
    * Find a user by ID
    */
   async findById(id: string): Promise<IUser | null> {
-    await connectToDatabase();
+    await connectDB();
     const user = await User.findById(id).select('email name role').lean();
     return user as IUser | null;
   },
@@ -89,7 +89,7 @@ export const userService = {
    * Set user as admin
    */
   async setUserAsAdmin(email: string): Promise<IUser | null> {
-    await connectToDatabase();
+    await connectDB();
     const user = await User.findOneAndUpdate(
       { email },
       { role: 'admin' },
@@ -102,7 +102,7 @@ export const userService = {
    * Register a new user
    */
   async register(userData: RegisterUserData): Promise<IUser> {
-    await connectToDatabase();
+    await connectDB();
     
     const { email, password, name } = userData;
     
@@ -132,7 +132,7 @@ export const userService = {
    * Verify user credentials for login
    */
   async verifyCredentials(credentials: LoginUserData): Promise<IUser | null> {
-    await connectToDatabase();
+    await connectDB();
     
     const { email, password } = credentials;
     
@@ -153,7 +153,7 @@ export const userService = {
   },
 
   async verifyUser(userId: string): Promise<IUser | null> {
-    await connectToDatabase();
+    await connectDB();
     const user = await User.findByIdAndUpdate(
       userId,
       { verified: true },
@@ -164,7 +164,7 @@ export const userService = {
   },
 
   async verifyAllPendingUsers(): Promise<IUser[]> {
-    await connectToDatabase();
+    await connectDB();
     const users = await User.updateMany(
       { verified: { $ne: true } },
       { verified: true }

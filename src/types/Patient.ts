@@ -43,16 +43,17 @@ export interface IAttachment {
 export interface IPatientDrug {
   drugId: Types.ObjectId;
   quantity?: number;
-  checked?: boolean;
+  checked: boolean;
 }
 export enum PatientLabTestStatus {
-  CheckedIn = "Checked In",
-  CheckedOut = "Checked Out",
+  Pending = "Pending",
+  Completed = "Completed",
+  Cancelled = "Cancelled",
 }
 
 export type PatientLabTestResult = {
   name: string;
-  value: string | number | boolean;
+  value: any;
   unit: string;
   refValue: string;
 };
@@ -60,7 +61,7 @@ export type PatientLabTestResult = {
 export interface IPatientLabTest {
   labtestId: Types.ObjectId;
   status: PatientLabTestStatus;
-  results: [PatientLabTestResult];
+  results: PatientLabTestResult[];
 }
 
 export enum MaritalStatus {
@@ -77,7 +78,7 @@ export enum EducationLevel {
   Preparatory = "Preparatory",
   Secondary = "Secondary",
   University = "University",
-  PostGraduate = "Post Graduate",
+  Postgraduate = "Postgraduate",
 }
 
 export type SmokingStatus =
@@ -139,19 +140,19 @@ export type DrugForChronicDisease = {
 };
 
 export type VitalData = {
-  BP: string;
-  PR: string;
-  RR: string;
-  CRT?: string; // for child
-  RBS?: string; // for child
-  Spo2?: string; // for child
-  temperature: string;
+  BP?: string;
+  PR?: string;
+  RR?: string;
+  CRT?: string;
+  RBS?: string;
+  Spo2?: string;
+  temperature?: string;
 };
 
 export enum Cyanosis {
-  Central = "Central",
-  Peripheral = "Peripheral",
   None = "None",
+  Peripheral = "Peripheral",
+  Central = "Central",
 }
 
 export type Complexions = {

@@ -1,46 +1,63 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bedaya';
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error("Please define the MONGODB_URI environment variable inside .env");
+}
 
 interface GlobalWithMongoose {
   mongoose: {
     conn: typeof mongoose | null;
     promise: Promise<typeof mongoose> | null;
-  };
+  } | undefined;
 }
 
-// Add mongoose to the global object in development
-const global = globalThis as unknown as GlobalWithMongoose;
+declare global {
+  var mongoose: {
+    conn: typeof mongoose | null;
+    promise: Promise<typeof mongoose> | null;
+  } | undefined;
+}
 
-// Initialize connection state
-global.mongoose = {
-  conn: null,
-  promise: null,
-};
+let cached = (global as GlobalWithMongoose).mongoose;
+
+if (!cached) {
+  cached = (global as GlobalWithMongoose).mongoose = { conn: null, promise: null };
+}
 
 /**
  * Connect to MongoDB
  */
-export async function connectToDatabase() {
-  // Return existing connection if already established
-  if (global.mongoose.conn) {
-    return global.mongoose.conn;
+export async function connectDB() {
+  if (cached?.conn) {
+    return cached.conn;
   }
 
-  // Create new connection if one doesn't exist
-  if (!global.mongoose.promise) {
-    const options = {
+  if (!cached?.promise) {
+    const opts = {
       bufferCommands: false,
     };
 
-    global.mongoose.promise = mongoose.connect(MONGODB_URI, options);
+    if (!cached) {
+      cached = (global as GlobalWithMongoose).mongoose = { conn: null, promise: null };
+    }
+
+    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
+      return mongoose;
+    });
   }
 
   try {
-    global.mongoose.conn = await global.mongoose.promise;
-    return global.mongoose.conn;
-  } catch (error) {
-    global.mongoose.promise = null;
-    throw error;
+    if (!cached) {
+      throw new Error("Connection not initialized");
+    }
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (e) {
+    if (cached) {
+      cached.promise = null;
+    }
+    throw e;
   }
 } 
