@@ -28,14 +28,14 @@ const CreatePatientPage = () => {
   return (
     <div className="md:p-6">
       <Card
-        title="Bedaya Medical Caravan – Adult Sheet"
+        title="Bedaya Medical Caravan – Pediatric Sheet"
         className="max-w-7xl mx-auto"
       >
         <Form
           form={form}
           onFinish={onFinish}
           initialValues={{
-            type: PatientType.Adult,
+            type: PatientType.Child,
             checkupDay: 1,
             followUp: false,
             communityDevelopment: false,
