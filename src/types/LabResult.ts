@@ -1,12 +1,12 @@
 import { Document, Types } from 'mongoose';
 
 export interface ILabResult extends Document {
-  patient_id: Types.ObjectId;
-  test_id: Types.ObjectId;
+  patientId: Types.ObjectId;
+  testId: Types.ObjectId;
   value: string;
   report?: string;
   checked?: boolean;
-  test_date?: Date;
+  testDate?: Date;
   createdAt: Date;
   updatedAt: Date;
 } 
