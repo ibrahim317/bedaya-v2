@@ -3,6 +3,8 @@
 import { Form, Input, Radio, Checkbox, Row, Col } from "antd";
 
 const PastHistorySection = () => {
+  const form = Form.useFormInstance();
+
   return (
     <div className="border-2 mt-4 border-dashed border-gray-400 rounded-md p-4">
       <h3 className="font-bold mb-2 underline-offset-1 underline">
@@ -61,7 +63,7 @@ const PastHistorySection = () => {
           <Form.Item label="Allergy" className="mb-2">
             <Row gutter={8}>
               <Col>
-                <Form.Item name={["allergy", "has"]} noStyle>
+                <Form.Item name={["allergyHistory", "enabled"]} noStyle>
                   <Radio.Group>
                     <Radio value={true}>Yes</Radio>
                     <Radio value={false}>No</Radio>
@@ -72,12 +74,13 @@ const PastHistorySection = () => {
                 <Form.Item
                   noStyle
                   shouldUpdate={(prevValues, currentValues) =>
-                    prevValues.allergy?.has !== currentValues.allergy?.has
+                    prevValues.allergyHistory?.enabled !==
+                    currentValues.allergyHistory?.enabled
                   }
                 >
                   {({ getFieldValue }) =>
-                    getFieldValue(["allergy", "has"]) && (
-                      <Form.Item name={["allergy", "specify"]} noStyle>
+                    getFieldValue(["allergyHistory", "enabled"]) && (
+                      <Form.Item name={["allergyHistory", "type"]} noStyle>
                         <Input placeholder="Specify" />
                       </Form.Item>
                     )
@@ -94,33 +97,16 @@ const PastHistorySection = () => {
           <Form.Item label="Blood Transfusion" className="mb-2">
             <Row align="middle">
               <Col>
-                <Form.Item name={["bloodTransfusion", "has"]} noStyle>
+                <Form.Item name={["bloodTransfusion", "type"]} noStyle>
                   <Radio.Group>
-                    <Radio value={false}>No</Radio>
                     <Radio value="occasional">Occasional</Radio>
                     <Radio value="regular">Regular</Radio>
                   </Radio.Group>
                 </Form.Item>
               </Col>
               <Col>
-                <Form.Item
-                  noStyle
-                  shouldUpdate={(prevValues, currentValues) =>
-                    prevValues.bloodTransfusion?.has !==
-                    currentValues.bloodTransfusion?.has
-                  }
-                >
-                  {({ getFieldValue }) =>
-                    getFieldValue(["bloodTransfusion", "has"]) &&
-                    getFieldValue(["bloodTransfusion", "has"]) !== false && (
-                      <Form.Item
-                        name={["bloodTransfusion", "duration"]}
-                        noStyle
-                      >
-                        <Input placeholder="Duration" style={{ width: 100 }} />
-                      </Form.Item>
-                    )
-                  }
+                <Form.Item noStyle name={["bloodTransfusion", "duration"]}>
+                  <Input placeholder="Duration" style={{ width: 100 }} />
                 </Form.Item>
               </Col>
             </Row>
@@ -132,7 +118,7 @@ const PastHistorySection = () => {
             <Row align="middle">
               <Col>
                 <Form.Item
-                  name={["surgical", "ICU"]}
+                  name={["surgicalHistory", "ICU"]}
                   valuePropName="checked"
                   noStyle
                 >
@@ -141,7 +127,7 @@ const PastHistorySection = () => {
               </Col>
               <Col>
                 <Form.Item
-                  name={["surgical", "operation", "enabled"]}
+                  name={["surgicalHistory", "operation", "enabled"]}
                   valuePropName="checked"
                   noStyle
                 >
@@ -152,14 +138,18 @@ const PastHistorySection = () => {
                 <Form.Item
                   noStyle
                   shouldUpdate={(prevValues, currentValues) =>
-                    prevValues.surgical?.operation?.enabled !==
-                    currentValues.surgical?.operation?.enabled
+                    prevValues.surgicalHistory?.operation?.enabled !==
+                    currentValues.surgicalHistory?.operation?.enabled
                   }
                 >
                   {({ getFieldValue }) =>
-                    getFieldValue(["surgical", "operation", "enabled"]) && (
+                    getFieldValue([
+                      "surgicalHistory",
+                      "operation",
+                      "enabled",
+                    ]) && (
                       <Form.Item
-                        name={["surgical", "operation", "type"]}
+                        name={["surgicalHistory", "operation", "type"]}
                         noStyle
                       >
                         <Input placeholder="Specify operation" />
@@ -179,7 +169,7 @@ const PastHistorySection = () => {
             <Row align="middle">
               <Col>
                 <Form.Item
-                  name={["chronicDrugs", "antiHTN"]}
+                  name={["drugsForChronicDisease", "antiHTN"]}
                   valuePropName="checked"
                   noStyle
                 >
@@ -188,7 +178,7 @@ const PastHistorySection = () => {
               </Col>
               <Col>
                 <Form.Item
-                  name={["chronicDrugs", "oralHypoglycemic"]}
+                  name={["drugsForChronicDisease", "oralHypoglycemic"]}
                   valuePropName="checked"
                   noStyle
                 >
@@ -197,7 +187,7 @@ const PastHistorySection = () => {
               </Col>
               <Col>
                 <Form.Item
-                  name={["chronicDrugs", "antiepileptic"]}
+                  name={["drugsForChronicDisease", "antiepileptic"]}
                   valuePropName="checked"
                   noStyle
                 >
@@ -206,7 +196,7 @@ const PastHistorySection = () => {
               </Col>
               <Col>
                 <Form.Item
-                  name={["chronicDrugs", "antidiuretic"]}
+                  name={["drugsForChronicDisease", "antidiuretic"]}
                   valuePropName="checked"
                   noStyle
                 >
@@ -215,7 +205,7 @@ const PastHistorySection = () => {
               </Col>
               <Col>
                 <Form.Item
-                  name={["chronicDrugs", "other", "enabled"]}
+                  name={["drugsForChronicDisease", "otherEnabled"]}
                   valuePropName="checked"
                   noStyle
                 >
@@ -226,14 +216,17 @@ const PastHistorySection = () => {
                 <Form.Item
                   noStyle
                   shouldUpdate={(prevValues, currentValues) =>
-                    prevValues.chronicDrugs?.other?.enabled !==
-                    currentValues.chronicDrugs?.other?.enabled
+                    prevValues.drugsForChronicDisease?.otherEnabled !==
+                    currentValues.drugsForChronicDisease?.otherEnabled
                   }
                 >
                   {({ getFieldValue }) =>
-                    getFieldValue(["chronicDrugs", "other", "enabled"]) && (
+                    getFieldValue([
+                      "drugsForChronicDisease",
+                      "otherEnabled",
+                    ]) && (
                       <Form.Item
-                        name={["chronicDrugs", "other", "value"]}
+                        name={["drugsForChronicDisease", "other"]}
                         noStyle
                       >
                         <Input placeholder="Specify other" />
@@ -280,7 +273,7 @@ const PastHistorySection = () => {
               </Col>
               <Col>
                 <Form.Item
-                  name={["familyHistory", "other", "enabled"]}
+                  name={["familyHistory", "otherEnabled"]}
                   valuePropName="checked"
                   noStyle
                 >
@@ -290,18 +283,15 @@ const PastHistorySection = () => {
               <Col>
                 <Form.Item
                   noStyle
-                  shouldUpdate={(prevValues, currentValues) =>
-                    prevValues.familyHistory?.other?.enabled !==
-                    currentValues.familyHistory?.other?.enabled
+                  shouldUpdate={(prev, curr) =>
+                    prev.familyHistory?.otherEnabled !==
+                    curr.familyHistory?.otherEnabled
                   }
                 >
                   {({ getFieldValue }) =>
-                    getFieldValue(["familyHistory", "other", "enabled"]) && (
-                      <Form.Item
-                        name={["familyHistory", "other", "value"]}
-                        noStyle
-                      >
-                        <Input placeholder="Specify other" />
+                    getFieldValue(["familyHistory", "otherEnabled"]) && (
+                      <Form.Item name={["familyHistory", "other"]} noStyle>
+                        <Input placeholder="Other (specify)" />
                       </Form.Item>
                     )
                   }

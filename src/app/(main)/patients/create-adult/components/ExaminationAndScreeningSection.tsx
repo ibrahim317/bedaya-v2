@@ -11,27 +11,27 @@ const ExaminationAndScreeningSection = () => {
             <h4 className="font-bold mb-2">Vital Data</h4>
             <Row gutter={[16, 8]}>
               <Col xs={8}>
-                <Form.Item label="BP" name={["vitalData", "bp"]}>
+                <Form.Item label="BP" name={["generalExamination", "vitalData", "BP"]}>
                   <Input />
                 </Form.Item>
               </Col>
               <Col xs={8}>
-                <Form.Item label="HR" name={["vitalData", "hr"]}>
+                <Form.Item label="HR" name={["generalExamination", "vitalData", "PR"]}>
                   <Input />
                 </Form.Item>
               </Col>
               <Col xs={8}>
-                <Form.Item label="Temp" name={["vitalData", "temp"]}>
+                <Form.Item label="Temp" name={["generalExamination", "vitalData", "temperature"]}>
                   <Input />
                 </Form.Item>
               </Col>
               <Col xs={8}>
-                <Form.Item label="RBS" name={["vitalData", "rbs"]}>
+                <Form.Item label="RBS" name={["generalExamination", "vitalData", "RBS"]}>
                   <Input />
                 </Form.Item>
               </Col>
               <Col xs={8}>
-                <Form.Item label="SpO2" name={["vitalData", "spo2"]}>
+                <Form.Item label="SpO2" name={["generalExamination", "vitalData", "Spo2"]}>
                   <Input />
                 </Form.Item>
               </Col>
@@ -44,7 +44,7 @@ const ExaminationAndScreeningSection = () => {
                   <Row>
                     <Col>
                       <Form.Item
-                        name={["complexions", "cyanosis", "peripheral"]}
+                        name={["generalExamination", "complexions", "cyanosis", "peripheral"]}
                         valuePropName="checked"
                         noStyle
                       >
@@ -55,7 +55,7 @@ const ExaminationAndScreeningSection = () => {
                   <Row>
                     <Col>
                       <Form.Item
-                        name={["complexions", "cyanosis", "central"]}
+                        name={["generalExamination", "complexions", "cyanosis", "central"]}
                         valuePropName="checked"
                         noStyle
                       >
@@ -67,7 +67,7 @@ const ExaminationAndScreeningSection = () => {
               </Col>
               <Col xs={8}>
                 <Form.Item
-                  name={["complexions", "jaundice"]}
+                  name={["generalExamination", "complexions", "jaundice"]}
                   valuePropName="checked"
                 >
                   <Checkbox>Jaundice</Checkbox>
@@ -75,7 +75,7 @@ const ExaminationAndScreeningSection = () => {
               </Col>
               <Col xs={8}>
                 <Form.Item
-                  name={["complexions", "pallor"]}
+                  name={["generalExamination", "complexions", "pallor"]}
                   valuePropName="checked"
                 >
                   <Checkbox>Pallor</Checkbox>
@@ -97,12 +97,12 @@ const ExaminationAndScreeningSection = () => {
                 </Form.Item>
               </Col>
               <Col xs={24}>
-                <Form.Item name={["screening", "uti"]} valuePropName="checked">
+                <Form.Item name={["screening", "UTI"]} valuePropName="checked">
                   <Checkbox>UTI (dipstick urine test) (urine lab)</Checkbox>
                 </Form.Item>
               </Col>
               <Col xs={24}>
-                <Form.Item name={["screening", "ogtt"]} valuePropName="checked">
+                <Form.Item name={["screening", "OGTT"]} valuePropName="checked">
                   <Checkbox>OGTT (pregnant) (Obs & Gyn / Labs)</Checkbox>
                 </Form.Item>
               </Col>

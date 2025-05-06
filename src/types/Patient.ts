@@ -10,6 +10,7 @@ export type FamilyHistory = {
   HTN: boolean;
   DM: boolean;
   other?: string;
+  otherEnabled?: boolean; // for frontend to show other input field
 };
 export type Screening = {
   nephropathy?: boolean;
@@ -28,6 +29,7 @@ export type MedicalHistory = {
   HCV: boolean;
   RHD: boolean;
   other?: string;
+  otherEnabled?: boolean; // for frontend to show other input field
 };
 
 export type AllergyHistory =
@@ -100,6 +102,7 @@ export type Contraception =
       enabled: true;
       method: "IUD" | "Implant" | "DOC" | "Other";
       other?: string;
+      otherEnabled?: boolean; // for frontend to show other input field
     }
   | { enabled: false };
 
@@ -108,13 +111,14 @@ export type BloodTransfusion =
       enabled: true;
       occasional: boolean;
       regualr: boolean;
-      other?: string;
+      duration?: string;
     }
   | { enabled: false };
 export type ICUHistory =
   | {
       enabled: true;
       other?: string;
+      otherEnabled?: boolean;
     }
   | { enabled: false };
 export type SurgicalHistory =
@@ -122,6 +126,7 @@ export type SurgicalHistory =
       enabled: true;
       ICU: boolean;
       other?: string;
+      otherEnabled?: boolean; // for frontend to show other input field
       operation:
         | {
             enabled: true;
@@ -135,8 +140,9 @@ export type DrugForChronicDisease = {
   antiHTN: boolean;
   oralHypoglycemic: boolean;
   antiepileptic: boolean;
-  antidiabetic: boolean;
+  antidiuretic: boolean;
   other?: string;
+  otherEnabled?: boolean; // for frontend to show other input field
 };
 
 export type VitalData = {
@@ -149,10 +155,9 @@ export type VitalData = {
   temperature?: string;
 };
 
-export enum Cyanosis {
-  None = "None",
-  Peripheral = "Peripheral",
-  Central = "Central",
+export type Cyanosis = {
+  peripheral: boolean;
+  central: boolean;
 }
 
 export type Complexions = {
@@ -283,7 +288,7 @@ export interface IPatient extends Document {
   drugsForChronicDisease?: DrugForChronicDisease;
   familyHistory?: FamilyHistory;
   screening?: Screening;
-  referralOfConvoyClinic?: ReferralOfConvoyClinic;
+  referral?: ReferralOfConvoyClinic;
   followUp: boolean;
   communityDevelopment: boolean;
 

@@ -3,6 +3,7 @@ import { Patient } from "@/models/Patient";
 import { connectDB } from "@/lib/db";
 import { PatientType } from "@/types/Patient";
 import type { SortOrder } from "mongoose";
+import { patientService } from "@/services/patientService";
 
 export async function GET(request: Request) {
   try {
@@ -46,6 +47,20 @@ export async function GET(request: Request) {
     return NextResponse.json(
       { error: error.message },
       { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    await connectDB();
+    const data = await request.json();
+    const patient = await patientService.createPatient(data);
+    return NextResponse.json({ data: patient }, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 400 }
     );
   }
 } 

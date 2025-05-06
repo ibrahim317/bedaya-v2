@@ -1,0 +1,69 @@
+import { IPatient, PatientType } from "@/types/Patient";
+
+interface FetchPatientsParams {
+  type: PatientType;
+  search?: string;
+  sortField?: string;
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}
+
+export async function fetchPatients({
+  type,
+  search = "",
+  sortField = "createdAt",
+  sortOrder = "desc",
+  page = 1,
+  pageSize = 10,
+}: FetchPatientsParams) {
+  const params = new URLSearchParams({
+    type,
+    search,
+    sortField,
+    sortOrder,
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  });
+
+  const response = await fetch(`/api/patients?${params}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch patients");
+  }
+
+  return response.json();
+}
+
+export async function createPatient(data: any) {
+  const response = await fetch("/api/patients", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to create patient");
+  }
+  return response.json();
+}
+
+export async function fetchPatientById(id: string): Promise<IPatient> {
+  const response = await fetch(`/api/patients/${id}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch patient");
+  }
+  return response.json();
+}
+
+export async function updatePatient(id: string, data: any) {
+  const response = await fetch(`/api/patients/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to update patient");
+  }
+  return response.json();
+} 

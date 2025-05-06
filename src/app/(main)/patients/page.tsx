@@ -2,9 +2,9 @@
 
 import { useCallback, useState, useEffect } from "react";
 import { Table, Input, Button, Card, App } from "antd";
-import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
+import { SearchOutlined, PlusOutlined, EditOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { fetchPatients } from "@/clients/patient";
+import { fetchPatients } from "@/clients/patientClient";
 import { PatientType } from "@/types/Patient";
 import dayjs from "dayjs";
 
@@ -149,6 +149,20 @@ const PatientListPage = () => {
       sorter: true,
       width: "20%",
       render: (date: string) => dayjs(date).format("YYYY-MM-DD HH:mm"),
+    },
+    {
+      title: "Actions",
+      dataIndex: "actions",
+      width: "10%",
+      render: (_: any, record: any) => (
+        <Button
+          icon={<EditOutlined />}
+          onClick={() => router.push(`/patients/update-adult/${record._id}`)}
+          size="small"
+        >
+          Edit
+        </Button>
+      ),
     },
   ];
 

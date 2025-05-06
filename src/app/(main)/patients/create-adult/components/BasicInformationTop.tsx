@@ -12,21 +12,25 @@ const BasicInformationTop = ({ form }: BasicInformationTopProps) => {
     <Row gutter={16} align="middle">
       <Col xs={24} md={8}>
         <Form.Item label="Day" name="checkupDay">
-          <div className="flex flex-wrap gap-4 mb-0">
-            {[1, 2, 3, 4, 5].map((day) => (
-              <Button
-                key={day}
-                type={
-                  form.getFieldValue("checkupDay") === day
-                    ? "primary"
-                    : "default"
-                }
-                onClick={() => form.setFieldValue("checkupDay", day)}
-              >
-                {day}
-              </Button>
-            ))}
-          </div>
+          <Form.Item noStyle shouldUpdate>
+            {() => (
+              <div className="flex flex-wrap gap-4 mb-0">
+                {[1, 2, 3, 4, 5].map((day) => (
+                  <Button
+                    key={day}
+                    type={
+                      form.getFieldValue("checkupDay") === day
+                        ? "primary"
+                        : "default"
+                    }
+                    onClick={() => form.setFieldValue("checkupDay", day)}
+                  >
+                    {day}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </Form.Item>
         </Form.Item>
       </Col>
 

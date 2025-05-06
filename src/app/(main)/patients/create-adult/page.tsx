@@ -1,24 +1,33 @@
 "use client";
 
-import { Card, Form, Button } from "antd";
+import { Card, Form } from "antd";
 import { PatientType } from "@/types/Patient";
+import { createPatient } from "@/clients/patientClient";
+import { message } from "antd";
+import AdultPatientForm from "./components/AdultPatientForm";
+import { useRouter } from "next/navigation";
 
-// Import the new components
-import BasicInformationTop from "./components/BasicInformationTop";
-import PatientDetails from "./components/PatientDetails";
-import HabitsSection from "./components/HabitsSection";
-import FemaleSpecificSection from "./components/FemaleSpecificSection";
-import ComplaintSection from "./components/ComplaintSection";
-import PastHistorySection from "./components/PastHistorySection";
-import ExaminationAndScreeningSection from "./components/ExaminationAndScreeningSection";
-import ReferralSection from "./components/ReferralSection";
+const initialValues = {
+  type: PatientType.Adult,
+  name: "",
+  sex: "",
+  code: "",
+  checkupDay: 1,
+};
 
 const CreatePatientPage = () => {
   const [form] = Form.useForm();
+  const router = useRouter();
 
   const onFinish = async (values: any) => {
-    // TODO: Implement form submission
-    console.log(values);
+    try {
+      await createPatient(values);
+      message.success("Patient created successfully");
+      form.resetFields();
+      router.push("/patients");
+    } catch (error: any) {
+      message.error(error.message || "Failed to create patient");
+    }
   };
 
   return (
@@ -27,59 +36,12 @@ const CreatePatientPage = () => {
         title="Bedaya Medical Caravan – Adult Sheet"
         className="max-w-7xl mx-auto"
       >
-        <Form
+        <AdultPatientForm
           form={form}
+          initialValues={initialValues}
           onFinish={onFinish}
-          layout="vertical" // Consistent vertical layout often looks better with complex forms
-          initialValues={{
-            type: PatientType.Adult,
-            checkupDay: 1,
-            followUp: false,
-            communityDevelopment: false,
-            // Sensible defaults for potentially undefined nested objects if needed
-            // allergy: { has: false },
-            // bloodTransfusion: { has: false },
-            // surgical: { operation: { enabled: false } },
-            // chronicDrugs: { other: { enabled: false } },
-            // familyHistory: { other: { enabled: false } },
-            // smokingStatus: { enabled: false },
-            // smokingCessation: { enabled: false },
-            // contraceptionMethod: { enabled: false },
-          }}
-        >
-          {/* Use the imported components */}
-          <BasicInformationTop form={form} />
-
-          <PatientDetails />
-
-          <HabitsSection />
-
-          {/* Conditionally render FemaleSpecificSection based on Sex */}
-          <Form.Item
-            noStyle
-            shouldUpdate={(prevValues, currentValues) =>
-              prevValues.sex !== currentValues.sex
-            }
-          >
-            {({ getFieldValue }) =>
-              getFieldValue("sex") === "F" ? <FemaleSpecificSection /> : null
-            }
-          </Form.Item>
-
-          <ComplaintSection />
-
-          <PastHistorySection />
-
-          <ExaminationAndScreeningSection />
-
-          <ReferralSection />
-
-          <Form.Item className="mt-6">
-            <Button type="primary" htmlType="submit" size="large">
-              Create Patient
-            </Button>
-          </Form.Item>
-        </Form>
+          submitLabel="Create Patient"
+        />
       </Card>
     </div>
   );

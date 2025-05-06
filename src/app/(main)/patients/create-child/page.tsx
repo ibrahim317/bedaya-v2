@@ -797,7 +797,7 @@ const CreatePatientPage = () => {
                     </Col>
                     <Col xs={24}>
                       <Form.Item
-                        name={["screening", "uti"]}
+                        name={["screening", "UTI"]}
                         valuePropName="checked"
                       >
                         <Checkbox>
@@ -807,7 +807,7 @@ const CreatePatientPage = () => {
                     </Col>
                     <Col xs={24}>
                       <Form.Item
-                        name={["screening", "ogtt"]}
+                        name={["screening", "OGTT"]}
                         valuePropName="checked"
                       >
                         <Checkbox>OGTT (pregnant) (Obs & Gyn / Labs)</Checkbox>

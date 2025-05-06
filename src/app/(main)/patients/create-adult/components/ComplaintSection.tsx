@@ -16,7 +16,7 @@ const ComplaintSection = () => {
                 <Col flex="auto">
                   <Form.Item
                     {...restField}
-                    name={[name, "description"]}
+                    name={name}
                     rules={[
                       {
                         required: true,
