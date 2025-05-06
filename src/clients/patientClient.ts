@@ -66,4 +66,15 @@ export async function updatePatient(id: string, data: any) {
     throw new Error(error.error || "Failed to update patient");
   }
   return response.json();
+}
+
+export async function deletePatient(id: string) {
+  const response = await fetch(`/api/patients/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to delete patient");
+  }
+  return response.json();
 } 

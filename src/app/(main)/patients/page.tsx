@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
-import { Table, Input, Button, Card, App } from "antd";
-import { SearchOutlined, PlusOutlined, EditOutlined } from "@ant-design/icons";
+import { Table, Input, Button, Card, App, Popconfirm } from "antd";
+import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { fetchPatients } from "@/clients/patientClient";
+import { fetchPatients, deletePatient } from "@/clients/patientClient";
 import { PatientType } from "@/types/Patient";
 import dayjs from "dayjs";
 
@@ -109,6 +109,19 @@ const PatientListPage = () => {
     }));
   };
 
+  const handleDelete = async (type: "adult" | "child", id: string) => {
+    try {
+      setLoading((prev) => ({ ...prev, [type]: true }));
+      await deletePatient(id);
+      message.success("Patient deleted successfully");
+      fetchTableData(type);
+    } catch (error: any) {
+      message.error(error.message || "Failed to delete patient");
+    } finally {
+      setLoading((prev) => ({ ...prev, [type]: false }));
+    }
+  };
+
   const columns = [
     {
       title: "Name",
@@ -155,13 +168,29 @@ const PatientListPage = () => {
       dataIndex: "actions",
       width: "10%",
       render: (_: any, record: any) => (
-        <Button
-          icon={<EditOutlined />}
-          onClick={() => router.push(`/patients/update-adult/${record._id}`)}
-          size="small"
-        >
-          Edit
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => router.push(`/patients/update-adult/${record._id}`)}
+            size="small"
+          >
+            Edit
+          </Button>
+          <Popconfirm
+            title="Are you sure to delete this patient?"
+            onConfirm={() => handleDelete(record.type === PatientType.Adult ? "adult" : "child", record._id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button
+              icon={<DeleteOutlined />}
+              danger
+              size="small"
+            >
+              Delete
+            </Button>
+          </Popconfirm>
+        </div>
       ),
     },
   ];

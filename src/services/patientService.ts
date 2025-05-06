@@ -51,4 +51,12 @@ export const patientService = {
     const updated = await Patient.findByIdAndUpdate(id, cleanedData, { new: true, lean: true });
     return updated;
   },
+  async deletePatientById(id: string) {
+    await connectDB();
+    const deleted = await Patient.findByIdAndDelete(id);
+    if (!deleted) {
+      throw new Error("Patient not found");
+    }
+    return deleted;
+  },
 }; 

@@ -19,16 +19,24 @@ const CreatePatientPage = () => {
   const [form] = Form.useForm();
   const router = useRouter();
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: any, redirect: boolean = true) => {
     try {
       await createPatient(values);
       message.success("Patient created successfully");
       form.resetFields();
-      router.push("/patients");
+      if (redirect) {
+        router.push("/patients");
+      }
+      router.push("/patients/create-adult");
     } catch (error: any) {
       message.error(error.message || "Failed to create patient");
     }
   };
+
+  const onFinishAndCreateNext = async (values: any) => {
+    await onFinish(values, false);
+  };
+
 
   return (
     <div className="md:p-6">
@@ -40,6 +48,7 @@ const CreatePatientPage = () => {
           form={form}
           initialValues={initialValues}
           onFinish={onFinish}
+          onFinishAndCreateNext={onFinishAndCreateNext}
           submitLabel="Create Patient"
         />
       </Card>

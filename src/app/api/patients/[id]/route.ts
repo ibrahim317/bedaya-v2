@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { patientService } from "@/services/patientService";
 
-const { getPatientById, updatePatientById } = patientService;
+const { getPatientById, updatePatientById, deletePatientById } = patientService;
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -25,5 +25,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json(updated);
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Failed to update patient" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    await deletePatientById(params.id);
+    return NextResponse.json({ message: "Patient deleted" }, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to delete patient" }, { status: 500 });
   }
 } 
