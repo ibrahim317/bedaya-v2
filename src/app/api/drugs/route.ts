@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       "ExpiryDate":new Date('2023-10-10'),
     }as DrugData;
 
-    const drug = await drugService.create(d);
+    const drug = await drugService.create(data);
 
   } catch (error) {
     if (error instanceof Error) {
