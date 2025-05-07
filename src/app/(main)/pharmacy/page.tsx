@@ -103,13 +103,20 @@ const columns: ColumnsType<FormattedDrug> = [
     },
     {
       title: 'Quantity',
-      dataIndex: 'quantity',
-      key: 'quantity',
+      dataIndex: 'Quantity',
+      key: 'Quantity',
     },
     {
       title: 'Strip Count',
       dataIndex: 'strip_count',
       key: 'strip_count',
+    },
+  {
+      title: 'Expiry Date',
+      dataIndex: 'ExpiryDate',
+      key: 'ExpiryDate',
+      sorter: (a, b) => a.ExpiryDate ? b.ExpiryDate ? new Date(a.ExpiryDate).getTime() - new Date(b.ExpiryDate).getTime() : 0 : 0,
+      render: (ExpiryDate: string) => ExpiryDate || 'N/A',
     },
     {
       title: 'Day 1',
