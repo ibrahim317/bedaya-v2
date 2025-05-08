@@ -51,7 +51,9 @@ useEffect(() => {
       setLoading(false);
     }
   };
+  if(loading){
   fetchDrugs();
+  }
 });
 
 useEffect(() => {
