@@ -12,7 +12,7 @@ import ReferralSection from "./ReferralSection";
 interface AdultPatientFormProps {
   initialValues: any;
   onFinish: (values: any) => void;
-  onFinishAndCreateNext: (values: any) => void;
+  onFinishAndCreateNext?: (values: any) => void;
   submitLabel?: string;
   form?: any;
   loading?: boolean;
@@ -54,16 +54,31 @@ const AdultPatientForm = ({
       <ExaminationAndScreeningSection />
       <ReferralSection />
       <Form.Item className="mt-6">
-        <Button type="primary" className="mr-4" htmlType="submit" size="large" loading={loading}>
+        <Button
+          type="primary"
+          className="mr-4"
+          htmlType="submit"
+          size="large"
+          loading={loading}
+        >
           {submitLabel}
         </Button>
 
-        <Button type="default" htmlType="submit" size="large" loading={loading} onClick={() => onFinishAndCreateNext(usedForm.getFieldsValue())}>
-          {submitLabel} & Create Next
-        </Button>
+        {onFinishAndCreateNext && (
+          <Button
+            type="default"
+            htmlType="submit"
+            size="large"
+            loading={loading}
+            onClick={() => onFinishAndCreateNext(usedForm.getFieldsValue())}
+          >
+            {submitLabel} & Create Next
+          </Button>
+        )}
       </Form.Item>
     </Form>
   );
 };
 
-export default AdultPatientForm; 
+export default AdultPatientForm;
+
