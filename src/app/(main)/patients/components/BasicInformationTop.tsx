@@ -10,6 +10,9 @@ interface BasicInformationTopProps {
 const BasicInformationTop = ({ form }: BasicInformationTopProps) => {
   return (
     <Row gutter={16} align="middle">
+      <Form.Item name="type" hidden>
+        <Input type="hidden" value={form.getFieldValue("type")} />
+      </Form.Item>
       <Col xs={24} md={8}>
         <Form.Item label="Day" name="checkupDay">
           <Form.Item noStyle shouldUpdate>

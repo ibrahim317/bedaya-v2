@@ -1,4 +1,4 @@
-import { Schema, model, Model } from 'mongoose';
+import { Schema, model, Model, models } from 'mongoose';
 import { IDiagnosis } from '@/types/Diagnosis';
 
 const DiagnosisSchema: Schema<IDiagnosis> = new Schema({
@@ -9,4 +9,5 @@ const DiagnosisSchema: Schema<IDiagnosis> = new Schema({
   report: { type: String },
 }, { timestamps: true });
 
-export const Diagnosis: Model<IDiagnosis> = model<IDiagnosis>('Diagnosis', DiagnosisSchema); 
+const Diagnosis: Model<IDiagnosis> = models.Diagnosis || model<IDiagnosis>('Diagnosis', DiagnosisSchema);
+export default Diagnosis;

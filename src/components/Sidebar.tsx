@@ -1,5 +1,5 @@
 import React from "react";
-import { Layout, Drawer } from "antd";
+import { Layout, Drawer, Divider } from "antd";
 import Image from "next/image";
 import { SideNavLinks } from "./SideNavLinks";
 import Link from "next/link";

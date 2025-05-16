@@ -6,7 +6,7 @@ import { userService } from '@/services/userService';
 import type { Document } from 'mongoose';
 import bcrypt from 'bcrypt';
 import { connectDB } from '@/lib/db';
-import User from '@/models/User';
+import User from '@/models/main/User';
 
 // Define the shape of our database User type
 interface MongoUser extends Document {

@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import User from '@/models/User';
+import User from '@/models/main/User';
 import { IUser } from '@/types/User';
 import { connectDB } from '@/lib/db';
 

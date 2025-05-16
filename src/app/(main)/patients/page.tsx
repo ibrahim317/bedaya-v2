@@ -10,6 +10,23 @@ import dayjs from "dayjs";
 
 const { Search } = Input;
 
+interface Patient {
+  _id: string;
+  name: string;
+  code: string;
+  sex: string;
+  age: number;
+  mobileNumber?: string;
+  checkupDay: number;
+  createdAt: string;
+  type: PatientType;
+}
+
+interface TableData {
+  adult: Patient[];
+  child: Patient[];
+}
+
 interface TableParams {
   search: string;
   sortField: string;
@@ -22,7 +39,7 @@ const PatientListPage = () => {
   const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState({ adult: false, child: false });
-  const [data, setData] = useState({ adult: [], child: [] });
+  const [data, setData] = useState<TableData>({ adult: [], child: [] });
   const [pagination, setPagination] = useState({
     adult: { current: 1, pageSize: 10, total: 0 },
     child: { current: 1, pageSize: 10, total: 0 },
@@ -114,6 +131,10 @@ const PatientListPage = () => {
       setLoading((prev) => ({ ...prev, [type]: true }));
       await deletePatient(id);
       message.success("Patient deleted successfully");
+      setData(prev => ({
+        ...prev,
+        [type]: Array.isArray(prev[type]) ? prev[type].filter(patient => patient._id !== id) : []
+      }));
       fetchTableData(type);
     } catch (error: any) {
       message.error(error.message || "Failed to delete patient");
@@ -171,14 +192,14 @@ const PatientListPage = () => {
         <div className="flex gap-2">
           <Button
             icon={<EditOutlined />}
-            onClick={() => router.push(`/patients/update-adult/${record._id}`)}
+            onClick={() => router.push(`/patients/update-${record.type}/${record._id}`)}
             size="small"
           >
             Edit
           </Button>
           <Popconfirm
             title="Are you sure to delete this patient?"
-            onConfirm={() => handleDelete(record.type === PatientType.Adult ? "adult" : "child", record._id)}
+            onConfirm={() => handleDelete(record.type, record._id)}
             okText="Yes"
             cancelText="No"
           >

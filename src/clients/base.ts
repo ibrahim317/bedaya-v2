@@ -8,16 +8,31 @@ class HttpError extends Error {
   }
 }
 
+// Helper to get the base URL for API calls
+function getBaseUrl() {
+  if (typeof window === 'undefined') {
+    // Server-side
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  }
+  // Client-side
+  return window.location.origin;
+}
+
 export async function fetchJson<T>(url: string, options: FetchOptions = {}): Promise<T> {
   const { params, ...fetchOptions } = options;
   
+  // Ensure URL is absolute
+  const baseUrl = getBaseUrl();
+  const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+  
   // Add query parameters if they exist
+  let finalUrl = fullUrl;
   if (params) {
     const searchParams = new URLSearchParams(params);
-    url = `${url}?${searchParams.toString()}`;
+    finalUrl = `${fullUrl}?${searchParams.toString()}`;
   }
 
-  const response = await fetch(url, {
+  const response = await fetch(finalUrl, {
     ...fetchOptions,
     headers: {
       'Content-Type': 'application/json',

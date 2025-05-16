@@ -20,13 +20,15 @@ const CreatePatientPage = () => {
 
   const onFinish = async (values: any, redirect: boolean = true) => {
     try {
+      console.log("values", values);
       await createPatient(values);
       message.success("Patient created successfully");
       form.resetFields();
       if (redirect) {
         router.push("/patients");
+      } else {
+        router.push("/patients/create-child");
       }
-      router.push("/patients/create-child");
     } catch (error: any) {
       message.error(error.message || "Failed to create patient");
     }

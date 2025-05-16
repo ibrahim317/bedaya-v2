@@ -1,4 +1,4 @@
-import Drug from '../models/Drug';
+import Drug from '../models/main/Drug';
 import { IDrug } from '@/types/Drug';
 import { connectDB }from '@/lib/db';
 import { Document } from 'mongoose';

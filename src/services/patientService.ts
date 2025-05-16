@@ -1,4 +1,4 @@
-import { Patient } from "@/models/Patient";
+import { Patient } from "@/models/main/Patient";
 import { connectDB } from "@/lib/db";
 import { IPatient } from "@/types/Patient";
 
@@ -30,7 +30,6 @@ export const patientService = {
     await connectDB();
     try {
       const cleanedData = removeEmpty(data);
-      console.log("cleanedData", cleanedData);
       const patient = new Patient(cleanedData);
       await patient.save();
       return patient.toObject();

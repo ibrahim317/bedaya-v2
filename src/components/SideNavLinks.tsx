@@ -1,8 +1,8 @@
-import { Menu } from 'antd';
-import { MenuProps } from 'antd';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { Menu } from "antd";
+import { MenuProps } from "antd";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   DashboardOutlined,
   UserOutlined,
@@ -10,7 +10,8 @@ import {
   MedicineBoxOutlined,
   HomeOutlined,
   ExperimentOutlined,
-} from '@ant-design/icons';
+  FileTextOutlined,
+} from "@ant-design/icons";
 
 // Define menu item interface for type safety
 interface MenuItem {
@@ -22,27 +23,27 @@ interface MenuItem {
 // Base menu items configuration
 const BASE_MENU_ITEMS: MenuItem[] = [
   {
-    key: '/dashboard',
+    key: "/dashboard",
     icon: <DashboardOutlined />,
     label: <Link href="/dashboard">Dashboard</Link>,
   },
   {
-    key: '/patients',
+    key: "/patients",
     icon: <TeamOutlined />,
     label: <Link href="/patients">Patients</Link>,
   },
   {
-    key: '/pharmacy',
+    key: "/pharmacy",
     icon: <MedicineBoxOutlined />,
     label: <Link href="/pharmacy">Pharmacy</Link>,
   },
   {
-    key: '/clinics',
+    key: "/clinics",
     icon: <HomeOutlined />,
     label: <Link href="/clinics">Clinics</Link>,
   },
   {
-    key: '/labs',
+    key: "/labs",
     icon: <ExperimentOutlined />,
     label: <Link href="/labs">Labs</Link>,
   },
@@ -51,24 +52,36 @@ const BASE_MENU_ITEMS: MenuItem[] = [
 // Admin-only menu items
 const ADMIN_MENU_ITEMS: MenuItem[] = [
   {
-    key: '/users',
+    key: "/users",
     icon: <UserOutlined />,
     label: <Link href="/users">Users</Link>,
+  },
+  {
+    key: "/clinics-management",
+    icon: <HomeOutlined />,
+    label: <Link href="/clinics-management">Clinics Management</Link>,
   },
 ];
 
 // Helper function to get menu items based on user role
-const getMenuItems = (isAdmin: boolean): MenuProps['items'] => {
-  return isAdmin ? [...BASE_MENU_ITEMS, ...ADMIN_MENU_ITEMS] : BASE_MENU_ITEMS;
+const getMenuItems = (isAdmin: boolean): MenuProps["items"] => {
+  if (!isAdmin) return BASE_MENU_ITEMS;
+
+  return [
+    ...BASE_MENU_ITEMS,
+    { type: "divider" },
+    { type: "group", label: "Admin Links" },
+    ...ADMIN_MENU_ITEMS,
+  ];
 };
 
 export const SideNavLinks = () => {
   const pathname = usePathname();
   const { data: session } = useSession();
-  
+
   // Determine if user is admin
-  const isAdmin = session?.user?.role === 'admin';
-  
+  const isAdmin = session?.user?.role === "admin";
+
   // Get appropriate menu items based on user role
   const menuItems = getMenuItems(isAdmin);
 

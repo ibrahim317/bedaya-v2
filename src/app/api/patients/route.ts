@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Patient } from "@/models/Patient";
+import { Patient } from "@/models/main/Patient";
 import { connectDB } from "@/lib/db";
 import { PatientType } from "@/types/Patient";
 import type { SortOrder } from "mongoose";
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
       .sort({ [sortField]: sortOrder })
       .skip((page - 1) * pageSize)
       .limit(pageSize)
-      .select("name code sex age mobileNumber checkupDay createdAt");
+      .select("type name code sex age mobileNumber checkupDay createdAt");
 
     return NextResponse.json({
       data: patients,

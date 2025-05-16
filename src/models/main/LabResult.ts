@@ -1,4 +1,4 @@
-import { Schema, model, Model } from 'mongoose';
+import { Schema, model, Model, models } from 'mongoose';
 import { ILabResult } from '@/types/LabResult';
 
 const LabResultSchema: Schema<ILabResult> = new Schema({
@@ -10,4 +10,4 @@ const LabResultSchema: Schema<ILabResult> = new Schema({
   testDate: { type: Date, default: Date.now },
 }, { timestamps: true });
 
-export const LabResult: Model<ILabResult> = model<ILabResult>('LabResult', LabResultSchema);
+export const LabResult: Model<ILabResult> = models.LabResult || model<ILabResult>('LabResult', LabResultSchema);

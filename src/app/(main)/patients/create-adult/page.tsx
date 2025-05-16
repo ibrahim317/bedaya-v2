@@ -27,7 +27,9 @@ const CreatePatientPage = () => {
       if (redirect) {
         router.push("/patients");
       }
-      router.push("/patients/create-adult");
+      else {
+        router.push("/patients/create-adult");
+      }
     } catch (error: any) {
       message.error(error.message || "Failed to create patient");
     }

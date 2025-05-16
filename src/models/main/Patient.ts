@@ -97,6 +97,7 @@ const BloodTransfusionSchema = new Schema(
     enabled: { type: Boolean, default: false },
     type: {type: String, enum: ["occasional","regular"]},
     duration: { type: String },
+    details: { type: String },
   },
   { _id: false }
 );
@@ -151,6 +152,7 @@ const AnthropometrySchema = new Schema(
     OFC: { type: Number },
     weightForAge: { type: Number },
     heightForAge: { type: Number },
+    weightForHeight: { type: Number },
     deformity: { type: Boolean, default: false },
   },
   { _id: false }

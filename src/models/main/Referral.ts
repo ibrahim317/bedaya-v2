@@ -1,4 +1,4 @@
-import { Schema, model, Model } from 'mongoose';
+import { Schema, model, Model, models } from 'mongoose';
 import { IReferral } from '@/types/Referral';
 
 const ReferralSchema: Schema<IReferral> = new Schema({
@@ -9,4 +9,4 @@ const ReferralSchema: Schema<IReferral> = new Schema({
   referralDate: { type: Date, default: Date.now },
 }, { timestamps: true });
 
-export const Referral: Model<IReferral> = model<IReferral>('Referral', ReferralSchema);
+export const Referral: Model<IReferral> = models.Referral || model<IReferral>('Referral', ReferralSchema);

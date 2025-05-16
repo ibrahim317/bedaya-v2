@@ -1,4 +1,4 @@
-import { Schema, model, Model } from 'mongoose';
+import { Schema, model, Model, models } from 'mongoose';
 import { IFollowUp } from '@/types/FollowUp';
 
 const FollowUpSchema: Schema<IFollowUp> = new Schema({
@@ -10,4 +10,4 @@ const FollowUpSchema: Schema<IFollowUp> = new Schema({
   notes: { type: String },
 }, { timestamps: true });
 
-export const FollowUp: Model<IFollowUp> = model<IFollowUp>('FollowUp', FollowUpSchema);
+export const FollowUp: Model<IFollowUp> = models.FollowUp || model<IFollowUp>('FollowUp', FollowUpSchema);
