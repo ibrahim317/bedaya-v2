@@ -1,5 +1,5 @@
-import { NextRequest,NextResponse } from 'next/server';
-import { drugService,DrugData} from '@/services/drugService';
+import { NextRequest, NextResponse } from 'next/server';
+import { drugService, DrugData } from '@/services/drugService';
 
 export async function GET(request: NextRequest) {
     try {
@@ -56,35 +56,54 @@ export async function DELETE(request: NextRequest) {
 } 
 
 export async function POST(req: NextRequest) {
-  console.log('Parsed JSON:', await req.json());
   try {
-    const {drugId ,name,Quantity,stripInTHeBox,sample,ExpiryDate} = await req.json();
-    // Check if required fields are provided
-    if (
-      typeof drugId !== 'string' ||
-      typeof name !== 'string' ||
-      typeof Quantity !== 'number' ||
-      typeof stripInTHeBox !== 'number' ||
-      typeof sample !== 'boolean' ||
-      typeof ExpiryDate !== 'string'
-    ) {
+    const body = await req.json();
+    const { 
+      barcode,          // barcode
+      name,
+      quantity,       // number of boxes
+      stripsPerBox,     // strips per box
+      sample = false,
+      expiryDate 
+    } = body;
+
+    // Validate required fields
+    if (!barcode || !name || !quantity || !stripsPerBox || !expiryDate) {
       return NextResponse.json(
-        { error: 'Invalid data types or missing fields' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
-    const data: DrugData = {drugId, name, Quantity, stripInTHeBox, sample, ExpiryDate: new Date(ExpiryDate)} as DrugData;
-    const d:DrugData =  {
-      "drugId": '2',
-      "name": 'para',
-      "Quantity": 2,
-      "stripInTHeBox": 2,
-      "sample": false,
-      "ExpiryDate":new Date('2023-10-10'),
-    }as DrugData;
+
+    // Validate data types
+    if (
+      typeof barcode !== 'string' ||
+      typeof name !== 'string' ||
+      typeof quantity !== 'number' ||
+      typeof stripsPerBox !== 'number' ||
+      typeof sample !== 'boolean' ||
+      !expiryDate
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid data types' },
+        { status: 400 }
+      );
+    }
+
+    // Calculate total quantity
+    const totalQuantity = (quantity * stripsPerBox);
+
+    const data: DrugData = {
+      barcode,
+      name,
+      quantity: totalQuantity,
+      stripsPerBox,
+      sample,
+      expiryDate: new Date(expiryDate)
+    };
 
     const drug = await drugService.create(data);
-
+    return NextResponse.json(drug);
   } catch (error) {
     if (error instanceof Error) {
       const errorMessage = error.message;

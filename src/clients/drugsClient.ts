@@ -1,19 +1,10 @@
-
 import { DrugData, drugService } from '@/services/drugService';
+import { Document } from 'mongoose';
 import { fetchJson } from './base';
 import { IDrug } from '@/types/Drug';
 
 
-export interface FormattedDrug {
-    drugId: string;
-    name: string;
-    Quantity: number;
-    strip_count: number;
-    sample: boolean;
-    ExpiryDate: string;
-    dailyConsumption?: number[]; // count of drugs consumed per day
-    createdAt?: string;
-  }
+export type FormattedDrug = Omit<IDrug, keyof Document>;
 
 export const drugsClient = {
     /**
@@ -26,13 +17,13 @@ export const drugsClient = {
         }
         const drugs: IDrug[] = await response.json();
         return drugs.map(drug => ({
-            drugId: drug.drugId.toString(),
+            barcode: drug.barcode,
             name: drug.name,
-            Quantity: drug.Quantity,
-            strip_count: drug.Quantity * drug.stripInTHeBox, // calculate the  All strip_count
+            quantity: drug.quantity,
+            stripsPerBox: drug.stripsPerBox, // calculate the  All strip_count
             sample: drug.sample,
-            ExpiryDate: new Date(drug.ExpiryDate).toLocaleDateString(),
-            dailyConsumption: drug.DailyConsumption,
+            expiryDate: new Date(drug.expiryDate).toLocaleDateString(),
+            dailyConsumption: drug.dailyConsumption,
             createdAt: drug.createdAt ? new Date(drug.createdAt).toLocaleDateString() : 'N/A'
         }));
     },

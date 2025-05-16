@@ -1,15 +1,15 @@
 import { Document} from 'mongoose';
 
 export interface IDrug extends Document {
-  drugId: String; //barcode
+  barcode: string;
   name: string;
-  Quantity: number;
-  stripInTHeBox: number ;
+  quantity: number;
+  stripsPerBox: number ;
   sample: boolean
-  ExpiryDate: Date;
-  DailyConsumption?:number[];  // count of drugs consumed par day
+  expiryDate: Date | string;
+  dailyConsumption?:number[];  // count of drugs consumed par day
 
  // Timestamps
-  createdAt?: Date;
-  updatedAt?: Date;
-} 
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}                   

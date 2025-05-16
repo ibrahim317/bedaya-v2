@@ -5,6 +5,15 @@ export enum PatientType {
   Child = "child",
 }
 
+export type ChildFamilyHistory = {
+  similarCondition: string;
+  HTN: string;
+  DM: string;
+  geneticDisease: string;
+  other?: string;
+  otherEnabled?: boolean; // for frontend to show other input field
+};
+
 export type FamilyHistory = {
   similarCondition: boolean;
   HTN: boolean;
@@ -187,12 +196,13 @@ export type ReferralOfConvoyClinic = {
   surgery: boolean;
   ophth: boolean;
   obsAndGyn: boolean;
+  gyn: boolean;
+  pharmacy: boolean;
   ENT: boolean;
   derma: boolean;
   ortho: boolean;
   dental: boolean;
   goHome: boolean;
-  isOther: boolean;
   other?: string;
 };
 // ------------- Child Specific Info -------------
@@ -297,10 +307,10 @@ export interface IPatient extends Document {
   fatherEducationLevel?: EducationLevel;
   motherEducationLevel?: EducationLevel;
   birthTerm?: BirthTerm;
-  consanguinity?: boolean;
+  consanguinity?: string;
   NICUAdmission?: string;
   orderOfBirth?: string;
-
+  childFamilyHistory?: ChildFamilyHistory;
   immunizationHistory?: ImmunizationHistory;
   dieteticHistory?: DieteticHistory;
   developmentalHistory?: DevelopmentalHistory;

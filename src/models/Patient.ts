@@ -36,6 +36,7 @@ import {
   NeonatalHistory,
   ICUHistory,
   Anthropometry,
+  ChildFamilyHistory,
 } from "@/types/Patient";
 
 const FamilyHistorySchema: Schema<FamilyHistory> = new Schema(
@@ -48,11 +49,25 @@ const FamilyHistorySchema: Schema<FamilyHistory> = new Schema(
   { _id: false }
 );
 
+const ChildFamilyHistorySchema: Schema<ChildFamilyHistory> = new Schema(
+  {
+    similarCondition: { type: String, default: "" },
+    HTN: { type: String, default: "" },
+    DM: { type: String, default: "" },
+    geneticDisease: { type: String, default: "" },
+    other: { type: String },
+  },
+  { _id: false }
+);
 const ScreeningSchema: Schema<Screening> = new Schema(
   {
     nephropathy: { type: Boolean, default: false },
     UTI: { type: Boolean, default: false },
     OGTT: { type: Boolean, default: false },
+    rickets: { type: Boolean, default: false },
+    anemia: { type: Boolean, default: false },
+    parasites: { type: Boolean, default: false },
+    DM: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -270,11 +285,14 @@ const ReferralOfConvoyClinicSchema: Schema<ReferralOfConvoyClinic> = new Schema(
     surgery: { type: Boolean, default: false },
     ophth: { type: Boolean, default: false },
     obsAndGyn: { type: Boolean, default: false },
+    gyn: { type: Boolean, default: false },
     ENT: { type: Boolean, default: false },
     derma: { type: Boolean, default: false },
     ortho: { type: Boolean, default: false },
+    pharmacy: { type: Boolean, default: false },
     dental: { type: Boolean, default: false },
     goHome: { type: Boolean, default: false },
+    other: { type: String },
   },
   { _id: false }
 );
@@ -408,7 +426,7 @@ const PatientSchema: Schema<IPatient> = new Schema(
     fatherEducationLevel: { type: String, enum: Object.values(EducationLevel) },
     motherEducationLevel: { type: String, enum: Object.values(EducationLevel) },
     birthTerm: { type: BirthTermSchema },
-    consanguinity: { type: Boolean, default: false },
+    consanguinity: { type: String, default: "" },
     NICUAdmission: { type: String, default: "" },
     orderOfBirth: { type: String, default: "" },
     birthMode: { type: BirthModeSchema },
@@ -416,6 +434,7 @@ const PatientSchema: Schema<IPatient> = new Schema(
     localExamination: { type: LocalExaminationSchema },
 
     // Child History
+    childFamilyHistory: { type: ChildFamilyHistorySchema },
     immunizationHistory: { type: ImmunizationHistorySchema },
     dieteticHistory: { type: DieteticHistorySchema },
     developmentalHistory: { type: DevelopmentalHistorySchema },

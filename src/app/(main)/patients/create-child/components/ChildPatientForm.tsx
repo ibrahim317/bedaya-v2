@@ -1,15 +1,14 @@
-import { Card, Form, Button } from "antd";
-import { PatientType } from "@/types/Patient";
+import { Form, Button } from "antd";
 import BasicInformationTop from "../../components/BasicInformationTop";
 import PatientDetails from "./PatientDetails";
-import HabitsSection from "./HabitsSection";
-import FemaleSpecificSection from "./FemaleSpecificSection";
 import ComplaintSection from "../../components/ComplaintSection";
-import PastHistorySection from "./PastHistorySection";
-import ExaminationAndScreeningSection from "./ExaminationAndScreeningSection";
+import FamilyAndPastHistorySection from "./FamilyAndPastHistorySection";
+import DetailedHistorySection from "./DetailedHistorySection";
+import GeneralExaminationSection from "./GeneralExaminationSection";
 import ReferralSection from "./ReferralSection";
-
-interface AdultPatientFormProps {
+import LocalExaminationSection from "./LocalExaminationSection";
+import ScreeningSection from "./ScreeningSection";
+interface ChildPatientFormProps {
   initialValues: any;
   onFinish: (values: any) => void;
   onFinishAndCreateNext?: (values: any) => void;
@@ -18,14 +17,14 @@ interface AdultPatientFormProps {
   loading?: boolean;
 }
 
-const AdultPatientForm = ({
+const ChildPatientForm = ({
   initialValues,
   onFinish,
   onFinishAndCreateNext,
   submitLabel = "Create Patient",
   form,
   loading = false,
-}: AdultPatientFormProps) => {
+}: ChildPatientFormProps) => {
   const [internalForm] = Form.useForm();
   const usedForm = form || internalForm;
 
@@ -38,21 +37,13 @@ const AdultPatientForm = ({
     >
       <BasicInformationTop form={usedForm} />
       <PatientDetails />
-      <HabitsSection />
-      <Form.Item
-        noStyle
-        shouldUpdate={(prevValues, currentValues) =>
-          prevValues.sex !== currentValues.sex
-        }
-      >
-        {({ getFieldValue }) =>
-          getFieldValue("sex") === "F" ? <FemaleSpecificSection /> : null
-        }
-      </Form.Item>
       <ComplaintSection />
-      <PastHistorySection />
-      <ExaminationAndScreeningSection />
+      <FamilyAndPastHistorySection />
+      <DetailedHistorySection />
+      <GeneralExaminationSection />
+      <LocalExaminationSection />
       <ReferralSection />
+      <ScreeningSection />
       <Form.Item className="mt-6">
         <Button
           type="primary"
@@ -80,5 +71,5 @@ const AdultPatientForm = ({
   );
 };
 
-export default AdultPatientForm;
+export default ChildPatientForm;
 

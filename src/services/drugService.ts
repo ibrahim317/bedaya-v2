@@ -1,16 +1,11 @@
 import Drug from '../models/Drug';
 import { IDrug } from '@/types/Drug';
 import { connectDB }from '@/lib/db';
+import { Document } from 'mongoose';
 
 
-export interface DrugData {
-    drugId: string; //barcode
-    name: string;
-    Quantity: number;
-    stripInTHeBox: number;
-    sample: boolean;
-    ExpiryDate: Date;
-}
+export interface DrugData extends Omit<IDrug, keyof Document> {}
+
 export const drugService = {
 
     async findAll():Promise<IDrug[]> {
@@ -38,20 +33,20 @@ export const drugService = {
 
     async create(drug:any):Promise<IDrug> {
         await connectDB();
-        const { drugId ,name,Quantity,stripInTHeBox,sample,ExpiryDate} = drug;
+        const { barcode ,name,quantity,stripsPerBox,sample,expiryDate} = drug;
         // Check if the drug already exists
-        const existingDrug = await Drug.findOne({ drugId }).lean();
+        const existingDrug = await Drug.findOne({ barcode }).lean();
         if (existingDrug) {
             throw new Error('Drug already exists');
         }
         // Create a new drug instance
         const newDrug = new Drug({
-            drugId,
+            barcode,
             name,
-            Quantity,
-        stripInTHeBox,
+            quantity,
+            stripsPerBox,
             sample : sample,
-            ExpiryDate,
+            expiryDate,
     });
        const savedDrug = await newDrug.save();
         return newDrug.toObject() as IDrug;
