@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { Card } from 'antd';
 import { clinicsClient } from '@/clients/clinicsClient';
