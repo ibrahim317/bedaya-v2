@@ -137,12 +137,12 @@ export default function ViewClinicModal({ open, clinic, onClose }: ViewClinicMod
               key="edit"
               type="text"
               icon={<EditOutlined />}
-              onClick={() => setEditingItem({ id: item._id as string, name: item.name, type })}
+              onClick={() => setEditingItem({ id: item._id?.toString() as string, name: item.name, type })}
             />,
             <Popconfirm
               key="delete"
               title={`Delete this ${type}?`}
-              onConfirm={() => handleDelete(item._id as string, type)}
+              onConfirm={() => handleDelete(item._id?.toString() as string, type)}
               okText="Yes"
               cancelText="No"
             >
