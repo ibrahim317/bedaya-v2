@@ -58,8 +58,8 @@ export default function PharmacyPage() {
   useEffect(() => {
     const filtered = Drugs.filter(
       (drug) =>
-        drug.barcode.toLowerCase().includes(searchText.toLowerCase()) ||
-        drug.name.toLowerCase().includes(searchText.toLowerCase())
+        drug.barcode?.toLowerCase().includes(searchText?.toLowerCase()) ||
+        drug.name?.toLowerCase().includes(searchText?.toLowerCase())
     );
     setFilteredDrugs(filtered);
   }, [searchText, Drugs]);
