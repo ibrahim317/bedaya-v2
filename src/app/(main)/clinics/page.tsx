@@ -1,11 +1,19 @@
 "use client";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Card, Row, Col } from 'antd';
-import { clinicsClient } from '@/clients/clinicsClient';
+import { clinicsClient, IClinicSummary } from '@/clients/clinicsClient';
 
-async function ClinicsPage() {
-  const clinics = await clinicsClient.getAllClinics();
+export default function ClinicsPage() {
+  const [clinics, setClinics] = useState<IClinicSummary[]>([]);
+
+  useEffect(() => {
+    const fetchClinics = async () => {
+      const clinics = await clinicsClient.getAllClinics();
+      setClinics(clinics);
+    };
+    fetchClinics();
+  }, []);
 
   return (
     <div className="p-6">
@@ -31,5 +39,3 @@ async function ClinicsPage() {
     </div>
   );
 }
-
-export default ClinicsPage;
