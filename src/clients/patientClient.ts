@@ -77,4 +77,17 @@ export async function deletePatient(id: string) {
     throw new Error(error.error || "Failed to delete patient");
   }
   return response.json();
+}
+
+export async function searchPatients(search: string) {
+  const params = new URLSearchParams({
+    search,
+    pageSize: "20",
+  });
+  const response = await fetch(`/api/patients?${params}`);
+  if (!response.ok) {
+    throw new Error("Failed to search patients");
+  }
+
+  return response.json();
 } 

@@ -18,7 +18,10 @@ export async function GET(request: Request) {
     const pageSize = parseInt(searchParams.get("pageSize") || "10");
 
     // Build query
-    const query: any = { type };
+    const query: any = {};
+    if (type) {
+      query.type = type;
+    }
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },

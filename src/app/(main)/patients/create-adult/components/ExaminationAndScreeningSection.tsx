@@ -110,6 +110,29 @@ const ExaminationAndScreeningSection = () => {
           </Card>
         </Col>
       </Row>
+      <Row gutter={[16, 16]} className="mt-4">
+        <Col xs={24}>
+          <Card title="Anthropometry" size="small">
+            <Row gutter={[16, 8]}>
+              <Col xs={8}>
+                <Form.Item label="Weight" name={["adultAnthropometry", "weight"]}>
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col xs={8}>
+                <Form.Item label="Height" name={["adultAnthropometry", "height"]}>
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col xs={8}>
+                <Form.Item label="BMI" name={["adultAnthropometry", "BMI"]}>
+                  <Input />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

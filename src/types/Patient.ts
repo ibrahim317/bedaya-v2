@@ -272,6 +272,12 @@ export type NeonatalHistory = {
   Convulsions?: string;
 };
 
+export type AdultAnthropometry = {
+  weight: number;
+  height: number;
+  BMI: number;
+};
+
 
 export interface IPatient extends Document {
   // Core Patient Info
@@ -301,6 +307,7 @@ export interface IPatient extends Document {
   referral?: ReferralOfConvoyClinic;
   followUp: boolean;
   communityDevelopment: boolean;
+  adultAnthropometry?: AdultAnthropometry;
 
   // Child Specific Info
   fatherOccupation?: string;

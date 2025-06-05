@@ -145,6 +145,15 @@ const ComplexionsSchema: Schema<Complexions> = new Schema(
   { _id: false }
 );
 
+const AdultAnthropometrySchema = new Schema(
+  {
+    weight: { type: Number },
+    height: { type: Number },
+    BMI: { type: Number },
+  },
+  { _id: false }
+);
+
 const AnthropometrySchema = new Schema(
   {
     weight: { type: Number },
@@ -411,6 +420,7 @@ const PatientSchema: Schema<IPatient> = new Schema(
     smokingStatus: { type: SmokingStatusSchema },
     smokingCessation: { type: SmokingCessationSchema },
     menstruation: { type: MenstruationSchema },
+    adultAnthropometry: { type: AdultAnthropometrySchema },
     contraceptionMethod: { type: ContraceptionSchema },
 
     // Medical Information
