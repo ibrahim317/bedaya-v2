@@ -10,29 +10,20 @@ export const drugsClient = {
     /**
      * Get all drugs
      */
-    async getAllDrugs(): Promise<FormattedDrug[]> {
+    async getAllDrugs(): Promise<IDrug[]> {
         const response = await fetch('/api/drugs?action=all');
         if (!response.ok) {
             throw new Error('Failed to fetch drugs');
         }
         const drugs: IDrug[] = await response.json();
-        return drugs.map(drug => ({
-            barcode: drug.barcode,
-            name: drug.name,
-            quantity: drug.quantity,
-            stripsPerBox: drug.stripsPerBox, // calculate the  All strip_count
-            sample: drug.sample,
-            expiryDate: new Date(drug.expiryDate).toLocaleDateString(),
-            dailyConsumption: drug.dailyConsumption,
-            createdAt: drug.createdAt ? new Date(drug.createdAt).toLocaleDateString() : 'N/A'
-        }));
+        return drugs;
     },
 
      /**
        * Find a drug by Id
        */
       async findById(drugId: string): Promise<IDrug | null> {
-        const response = await fetch(`/api/drugs?action=byId${drugId}`);
+        const response = await fetch(`/api/drugs?action=byId&drugId=${drugId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch drug');
         }
@@ -44,7 +35,7 @@ export const drugsClient = {
        * Find a drug by name
        */
       async findByName(name: string): Promise<IDrug | null> {
-        const response = await fetch(`/api/drugs?action=byName${name}`);
+        const response = await fetch(`/api/drugs?action=byName&name=${name}`);
         if (!response.ok) {
           throw new Error('Failed to fetch drug');
         }

@@ -1,6 +1,7 @@
-import { Document} from 'mongoose';
+import { Document } from 'mongoose';
 
 export interface IDrug extends Document {
+  _id: string;
   barcode: string;
   name: string;
   quantity: number;

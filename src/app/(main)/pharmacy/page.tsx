@@ -127,8 +127,9 @@ export default function PharmacyPage() {
             ? new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime()
             : 0
           : 0,
-      render: (expiryDate: string) => expiryDate || 'N/A',
-      width: 120,
+      render: (expiryDate: string) =>
+        expiryDate ? new Date(expiryDate).toLocaleDateString('en-GB') : 'N/A',
+      width: 180,
     },
     {
       title: 'Daily Consumption',
@@ -185,8 +186,9 @@ export default function PharmacyPage() {
             ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
             : 0
           : 0,
-      render: (createdAt: string) => createdAt || 'N/A',
-      width: 120,
+      render: (createdAt: string) =>
+        createdAt ? new Date(createdAt).toLocaleString('en-GB') : 'N/A',
+      width: 180,
     },
     {
       title: 'Actions',
@@ -252,7 +254,9 @@ export default function PharmacyPage() {
             type="primary"
             icon={<PlusOutlined />}
             className="mt-4"
+            onClick={() => router.push('/pharmacy/dispense')}
           >
+
             Add Patient Treatment
           </Button>
         </Card>

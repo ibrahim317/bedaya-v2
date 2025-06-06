@@ -32,5 +32,13 @@ export const clinicService = {
     }
     
     return { success: true };
+  },
+
+  async getPatientTreatmentsForClinic(clinicId: string, patientId: string) {
+    await PatientTreatment.find({ _id: null }); // Ensure model is initialized
+    return await PatientTreatment.find({
+      clinicId: new Types.ObjectId(clinicId),
+      patientId: new Types.ObjectId(patientId),
+    }).lean();
   }
 }; 

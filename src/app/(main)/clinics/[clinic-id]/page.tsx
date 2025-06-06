@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, Select, Form, Spin, Button, message } from 'antd';
+import { Card, Select, Form, Spin, Button, message, Table } from 'antd';
 import { clinicsClient, IClinic } from '@/clients/clinicsClient';
 import { searchPatients } from '@/clients/patientClient';
 import { IPatient } from '@/types/Patient';
@@ -20,6 +20,8 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
   const [searchedPatients, setSearchedPatients] = useState<IPatient[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [patientTreatments, setPatientTreatments] = useState<any[]>([]);
+  const [loadingTreatments, setLoadingTreatments] = useState(false);
 
   const clinicId = params['clinic-id'];
 
@@ -38,6 +40,25 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
   useEffect(() => {
     fetchClinic();
   }, [fetchClinic]);
+
+  useEffect(() => {
+    const fetchTreatments = async () => {
+      if (selectedPatient) {
+        setLoadingTreatments(true);
+        try {
+          const treatments = await clinicsClient.getPatientTreatments(clinicId, selectedPatient);
+          setPatientTreatments(treatments as any[]);
+        } catch (error) {
+          message.error("Failed to fetch patient's treatments.");
+        } finally {
+          setLoadingTreatments(false);
+        }
+      } else {
+        setPatientTreatments([]);
+      }
+    };
+    fetchTreatments();
+  }, [selectedPatient, clinicId]);
 
   const handlePatientSearch = async (query: string) => {
     if (query) {
@@ -86,6 +107,7 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
         setSelectedDiagnoses([]);
         setSelectedTreatments([]);
         setSearchedPatients([]);
+        setPatientTreatments([]);
         fetchClinic();
     } catch (error: any) {
         message.error(error.message || "Failed to save records.");
@@ -156,6 +178,29 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
             </Button>
         </Form.Item>
       </Form>
+      {selectedPatient && (
+        <Card title="Patient Treatment History">
+          <Table
+            dataSource={patientTreatments}
+            loading={loadingTreatments}
+            rowKey={(record) => record._id}
+            columns={[
+              {
+                title: 'Treatment',
+                dataIndex: 'treatmentName',
+                key: 'treatmentName',
+              },
+              {
+                title: 'Date',
+                dataIndex: 'createdAt',
+                key: 'createdAt',
+                render: (text) => new Date(text).toLocaleDateString(),
+              },
+            ]}
+            pagination={false}
+          />
+        </Card>
+      )}
     </div>
   );
 }

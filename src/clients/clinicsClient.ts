@@ -128,5 +128,9 @@ export const clinicsClient = {
     }
 
     return response.json();
+  },
+
+  async getPatientTreatments(clinicId: string, patientId: string) {
+    return await fetchJson(`/api/clinics/${clinicId}/patients/${patientId}/treatments`);
   }
 }; 
