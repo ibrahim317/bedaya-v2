@@ -1,4 +1,4 @@
-import { IPatient, PatientType } from "@/types/Patient";
+import { IPatient, PatientType, PatientLabTestStatus } from "@/types/Patient";
 
 interface FetchPatientsParams {
   type: PatientType;
@@ -42,7 +42,7 @@ export async function createPatient(data: any) {
   });
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || "Failed to create patient");
+    throw new Error(error.message || "Failed to create patient");
   }
   return response.json();
 }
@@ -90,4 +90,27 @@ export async function searchPatients(search: string) {
   }
 
   return response.json();
-} 
+}
+
+export const updateLabTest = async (
+  patientId: string,
+  data: {
+    labTestName: "Urine" | "Blood" | "Stool";
+    status: PatientLabTestStatus;
+  }
+) => {
+  try {
+    const response = await fetch(`/api/patients/${patientId}/lab-tests`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to update lab test");
+    }
+    return await response.json();
+  } catch (error: any) {
+    throw new Error(error.message || "Failed to update lab test");
+  }
+}; 

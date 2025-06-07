@@ -57,9 +57,9 @@ export interface IPatientDrug {
   checked: boolean;
 }
 export enum PatientLabTestStatus {
-  Pending = "Pending",
-  Completed = "Completed",
-  Cancelled = "Cancelled",
+  NotRequested = "Not Requested",
+  CheckedIn = "Checked In",
+  CheckedOut = "Checked Out",
 }
 
 export type PatientLabTestResult = {
@@ -69,8 +69,8 @@ export type PatientLabTestResult = {
   refValue: string;
 };
 
-export interface IPatientLabTest {
-  labtestId: Types.ObjectId;
+export type PatientLabTest = {
+  labTestName: "Urine" | "Blood" | "Stool";
   status: PatientLabTestStatus;
   results: PatientLabTestResult[];
 }
@@ -337,7 +337,7 @@ export interface IPatient extends Document {
   generalExamination: GeneralExamination;
   attachments: IAttachment[];
   drugs: IPatientDrug[];
-  labTest: IPatientLabTest[];
+  labTest: PatientLabTest[];
 
   // Timestamps
   createdAt: Date;

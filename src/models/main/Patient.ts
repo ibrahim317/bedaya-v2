@@ -6,7 +6,6 @@ import {
   IAttachment,
   IPatientDrug,
   PatientType,
-  IPatientLabTest,
   PatientLabTestStatus,
   PatientLabTestResult,
   Screening,
@@ -37,6 +36,7 @@ import {
   ICUHistory,
   Anthropometry,
   ChildFamilyHistory,
+  PatientLabTest,
 } from "@/types/Patient";
 
 const FamilyHistorySchema: Schema<FamilyHistory> = new Schema(
@@ -378,9 +378,9 @@ const PatientLabTestResultSchema: Schema<PatientLabTestResult> = new Schema(
   { _id: false }
 );
 
-const PatientLabTestSchema: Schema<IPatientLabTest> = new Schema(
+const PatientLabTestSchema: Schema<PatientLabTest> = new Schema(
   {
-    labtestId: { type: Schema.Types.ObjectId, ref: "LabTest" },
+    labTestName: { type: String, enum: ["Urine", "Blood", "Stool"] },
     status: {
       type: String,
       enum: Object.values(PatientLabTestStatus),
@@ -404,7 +404,7 @@ const PatientSchema: Schema<IPatient> = new Schema(
     age: { type: Number, default: 0 },
     houseNumber: { type: String, default: "" },
     mobileNumber: { type: String, default: "", index: true },
-    code: { type: String, index: true, unique: true, sparse: true },
+    code: { type: String, index: true },
     checkupDay: { type: Number, default: 1, min: 1, max: 5 },
 
     // Adult Specific
@@ -470,6 +470,8 @@ const PatientSchema: Schema<IPatient> = new Schema(
   },
   { timestamps: true }
 );
+
+PatientSchema.index({ code: 1, type: 1 }, { unique: true, sparse: true });
 
 // Handle hot reloading
 const Patient =

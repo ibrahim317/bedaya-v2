@@ -241,6 +241,7 @@ const PatientListPage = () => {
       {/* Adult Patients */}
       <Card
         title="Adult Patients"
+        className="overflow-x-auto"
         extra={
           <div className="flex gap-4">
             <Search
@@ -274,6 +275,7 @@ const PatientListPage = () => {
       {/* Child Patients */}
       <Card
         title="Child Patients"
+        className="overflow-x-auto"
         extra={
           <div className="flex gap-4">
             <Search

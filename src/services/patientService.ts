@@ -1,6 +1,6 @@
 import { Patient } from "@/models/main/Patient";
 import { connectDB } from "@/lib/db";
-import { IPatient } from "@/types/Patient";
+import { IPatient, PatientLabTest, PatientLabTestStatus } from "@/types/Patient";
 
 function removeEmpty(obj: any): any {
   if (Array.isArray(obj)) {
@@ -58,4 +58,37 @@ export const patientService = {
     }
     return deleted;
   },
+};
+
+export const updatePatientLabTest = async (
+  patientId: string,
+  labTestName: "Urine" | "Blood" | "Stool",
+  status: PatientLabTestStatus
+) => {
+  await connectDB();
+
+  const patient = await Patient.findById(patientId);
+
+  if (!patient) {
+    throw new Error("Patient not found");
+  }
+
+  const labTestIndex = patient.labTest.findIndex(
+    (test: PatientLabTest) => test.labTestName === labTestName
+  );
+
+  if (labTestIndex > -1) {
+    // Update existing lab test
+    patient.labTest[labTestIndex].status = status;
+  } else {
+    // Add new lab test
+    patient.labTest.push({
+      labTestName,
+      status,
+      results: [],
+    });
+  }
+
+  await patient.save();
+  return patient;
 }; 
