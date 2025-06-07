@@ -1,4 +1,9 @@
-import { IPatient, PatientType, PatientLabTestStatus } from "@/types/Patient";
+import {
+  IPatient,
+  PatientType,
+  PatientLabTestStatus,
+  PatientLabTestResult,
+} from "@/types/Patient";
 
 interface FetchPatientsParams {
   type: PatientType;
@@ -97,6 +102,7 @@ export const updateLabTest = async (
   data: {
     labTestName: "Urine" | "Blood" | "Stool";
     status: PatientLabTestStatus;
+    results?: PatientLabTestResult[];
   }
 ) => {
   try {

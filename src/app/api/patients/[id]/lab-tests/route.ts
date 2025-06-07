@@ -8,7 +8,7 @@ export async function POST(
   try {
     const patientId = params.id;
     const body = await req.json();
-    const { labTestName, status } = body;
+    const { labTestName, status, results } = body;
 
     if (!labTestName || !status) {
       return NextResponse.json(
@@ -20,7 +20,8 @@ export async function POST(
     const updatedPatient = await updatePatientLabTest(
       patientId,
       labTestName,
-      status
+      status,
+      results
     );
 
     return NextResponse.json(updatedPatient, { status: 200 });

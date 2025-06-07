@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       .sort({ [sortField]: sortOrder })
       .skip((page - 1) * pageSize)
       .limit(pageSize)
-      .select("type name code sex age mobileNumber checkupDay createdAt");
+      .select("type name code sex age mobileNumber checkupDay createdAt labTest");
 
     return NextResponse.json({
       data: patients,

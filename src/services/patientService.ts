@@ -1,6 +1,6 @@
 import { Patient } from "@/models/main/Patient";
 import { connectDB } from "@/lib/db";
-import { IPatient, PatientLabTest, PatientLabTestStatus } from "@/types/Patient";
+import { IPatient, PatientLabTest, PatientLabTestStatus, PatientLabTestResult } from "@/types/Patient";
 
 function removeEmpty(obj: any): any {
   if (Array.isArray(obj)) {
@@ -63,7 +63,8 @@ export const patientService = {
 export const updatePatientLabTest = async (
   patientId: string,
   labTestName: "Urine" | "Blood" | "Stool",
-  status: PatientLabTestStatus
+  status: PatientLabTestStatus,
+  results?: PatientLabTestResult[]
 ) => {
   await connectDB();
 
@@ -80,12 +81,15 @@ export const updatePatientLabTest = async (
   if (labTestIndex > -1) {
     // Update existing lab test
     patient.labTest[labTestIndex].status = status;
+    if (results) {
+      patient.labTest[labTestIndex].results = results;
+    }
   } else {
     // Add new lab test
     patient.labTest.push({
       labTestName,
       status,
-      results: [],
+      results: results || [],
     });
   }
 

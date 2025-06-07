@@ -99,14 +99,22 @@ const LabsPage = () => {
       );
       // Update local data to avoid refetch
       setData((prev) => {
-        const newData = { ...prev };
-        const patientIndex = newData[type].findIndex(
+        const patientList = prev[type];
+        const patientIndex = patientList.findIndex(
           (p) => p._id === patientId
         );
-        if (patientIndex > -1) {
-          newData[type][patientIndex] = updatedPatient;
+
+        if (patientIndex === -1) {
+          return prev;
         }
-        return newData;
+
+        const updatedPatientList = [...patientList];
+        updatedPatientList[patientIndex] = updatedPatient;
+
+        return {
+          ...prev,
+          [type]: updatedPatientList,
+        };
       });
     } catch (error: any) {
       message.error(error.message || `Failed to update ${labTestName} status`);
@@ -142,10 +150,7 @@ const LabsPage = () => {
     patientId: string,
     testType: "Stool" | "Urine" | "Blood"
   ) => {
-    // For now, this will just show a message.
-    // In the future, it could navigate to a page for setting results.
-    // Example: router.push(`/labs/${patientId}/set-result?test=${testType.toLowerCase()}`);
-    message.info(`Action for ${testType} for patient ${patientId}`);
+    router.push(`/labs/${testType.toLowerCase()}?patientId=${patientId}`);
   };
 
   const getStatusColumn = (
@@ -211,24 +216,41 @@ const LabsPage = () => {
       width: "20%",
       render: (record: IPatient) => (
         <div className="flex flex-col gap-2 items-start">
-          <Button
-            size="small"
-            onClick={() => handleSetResult(String(record._id), "Stool")}
-          >
-            Set Stool Results
-          </Button>
-          <Button
-            size="small"
-            onClick={() => handleSetResult(String(record._id), "Urine")}
-          >
-            Set Urine Results
-          </Button>
-          <Button
-            size="small"
-            onClick={() => handleSetResult(String(record._id), "Blood")}
-          >
-            Set Blood Results
-          </Button>
+          {(["Stool", "Urine", "Blood"] as const).map((labName) => {
+            const test = record.labTest?.find(
+              (t) => t.labTestName === labName
+            );
+            const isCheckedIn =
+              test?.status === PatientLabTestStatus.CheckedIn;
+            const isCheckedOut =
+              test?.status === PatientLabTestStatus.CheckedOut;
+            const isDisabled = !isCheckedIn && !isCheckedOut;
+            const buttonText = isCheckedOut
+              ? `Show ${labName} Result`
+              : `Set ${labName} Results`;
+
+            const handleClick = () => {
+              if (isDisabled) {
+                message.warning(
+                  `Please set the ${labName} status to "Checked In" first`
+                );
+              } else {
+                handleSetResult(String(record._id), labName);
+              }
+            };
+
+            return (
+              <div onClick={handleClick} key={labName}>
+                <Button
+                  size="small"
+                  disabled={isDisabled}
+                  style={{ pointerEvents: isDisabled ? "none" : "auto" }}
+                >
+                  {buttonText}
+                </Button>
+              </div>
+            );
+          })}
         </div>
       ),
     },
