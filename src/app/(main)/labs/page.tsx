@@ -167,7 +167,6 @@ const LabsPage = () => {
       return (
         <Select
           value={status || "Not Requested"}
-          style={{ width: 120 }}
           onChange={(newStatus) =>
             handleStatusChange(
               String(record._id),
