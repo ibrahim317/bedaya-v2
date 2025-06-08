@@ -308,6 +308,8 @@ export interface IPatient extends Document {
   followUp: boolean;
   communityDevelopment: boolean;
   adultAnthropometry?: AdultAnthropometry;
+  numberOfChildren?: number;
+  ageOfYoungestChild?: number;
 
   // Child Specific Info
   fatherOccupation?: string;

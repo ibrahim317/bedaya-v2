@@ -60,6 +60,22 @@ const PatientDetails = () => {
           </Form.Item>
         </Col>
       </Row>
+      <Row gutter={16} className="mb-4 flex items-center">
+        <Col>
+          <div className="text-gray-500 font-medium mb-2">If Married</div>
+        </Col>
+
+        <Col>
+          <Form.Item label="Number of Children" name="numberOfChildren">
+            <Input type="number" placeholder="Enter number of children" />
+          </Form.Item>
+        </Col>
+        <Col>
+          <Form.Item label="Age of Youngest Child" name="ageOfYoungestChild">
+            <Input type="number" placeholder="Enter age of youngest child" />
+          </Form.Item>
+        </Col>
+      </Row>
       <Row gutter={16}>
         <Col>
           <Form.Item label="Education Level" name="educationLevel">

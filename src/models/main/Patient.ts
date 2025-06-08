@@ -422,6 +422,11 @@ const PatientSchema: Schema<IPatient> = new Schema(
     menstruation: { type: MenstruationSchema },
     adultAnthropometry: { type: AdultAnthropometrySchema },
     contraceptionMethod: { type: ContraceptionSchema },
+    numberOfChildren: { type: Number },
+    ageOfYoungestChild: { type: Number },
+
+
+
 
     // Medical Information
     medicalHistory: { type: MedicalHistorySchema },
