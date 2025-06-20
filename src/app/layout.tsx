@@ -5,6 +5,7 @@ import AuthProvider from "@/providers/AuthProvider";
 import AntdRegistry from "@/providers/AntdRegistry";
 import ThemeProvider from "@/providers/ThemeProvider";
 import { App as AntApp } from 'antd';
+import QueryProvider from '@/providers/QueryProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -24,7 +25,9 @@ export default function RootLayout({
         <AntdRegistry>
           <ThemeProvider>
             <AuthProvider>
-              <AntApp>{children}</AntApp>
+              <QueryProvider>
+                <AntApp>{children}</AntApp>
+              </QueryProvider>
             </AuthProvider>
           </ThemeProvider>
         </AntdRegistry>

@@ -29,6 +29,7 @@ export type Screening = {
   anemia?: boolean;
   parasites?: boolean;
   DM?: boolean;
+  diabetes?: boolean;
 };
 
 export type MedicalHistory = {
@@ -70,7 +71,7 @@ export type PatientLabTestResult = {
 };
 
 export type PatientLabTest = {
-  labTestName: "Urine" | "Blood" | "Stool";
+  labTestName: "Urine" | "Blood" | "Stool" | "Albumin-Creat";
   status: PatientLabTestStatus;
   results: PatientLabTestResult[];
 }

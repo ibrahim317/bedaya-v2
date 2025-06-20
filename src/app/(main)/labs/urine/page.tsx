@@ -103,7 +103,6 @@ const UrineLabPage = () => {
         ...physicalExamItems,
         ...chemicalExamItems,
         ...microscopicExamItems,
-        ...albuminCreatTestItems,
       ].find((item) => item.name === key);
       return {
         name: key,
@@ -287,12 +286,6 @@ const UrineLabPage = () => {
     },
   ];
     
-  const albuminCreatTestItems: TestItem[] = [
-      { name: "Albumin", label: "Albumin", refValue: "<30 mg/g", type: "input" },
-      { name: "Creat", label: "Creat", refValue: "20-275 mg/dl in Females 20-320 mg/dl in male", type: "input" },
-      { name: "Albumin/Creat ratio", label: "Albumin/Creat ratio", refValue: "Normal < 30 mg/dl Microalbuminuria 30-300 mg/g Macroalbuminuria > 300 mg/g", type: "input" },
-  ];
-
   const abnormalFindingsOptions = ["Casts", "Eggs", "Mucus", "Bacteria", "Yeast", "Sperms"];
 
 
@@ -303,7 +296,7 @@ const UrineLabPage = () => {
       </Title>
       {patient ? (
       <Form form={form} layout="vertical" onFinish={onFinish}>
-        <Collapse defaultActiveKey={["1", "2", "3", "4", "5"]} >
+        <Collapse defaultActiveKey={["1", "2", "3", "4"]} >
           <Panel header="Physical Examination" key="1">
             {physicalExamItems.map(renderTestItem)}
           </Panel>
@@ -313,10 +306,7 @@ const UrineLabPage = () => {
           <Panel header="Microscopic Examination" key="3">
             {microscopicExamItems.map(renderTestItem)}
           </Panel>
-          <Panel header="Albumin/creat test" key="4">
-            {albuminCreatTestItems.map(renderTestItem)}
-          </Panel>
-          <Panel header="Abnormal findings" key="5">
+          <Panel header="Abnormal findings" key="4">
               <Form.Item name="abnormalFindings">
                   <Checkbox.Group options={abnormalFindingsOptions} />
               </Form.Item>

@@ -90,20 +90,10 @@ const ExaminationAndScreeningSection = () => {
             <Row gutter={[16, 16]}>
               <Col xs={24}>
                 <Form.Item
-                  name={["screening", "nephropathy"]}
+                  name={["screening", "diabetes"]}
                   valuePropName="checked"
                 >
-                  <Checkbox>Nephropathy screening (IM / Ophth / Labs)</Checkbox>
-                </Form.Item>
-              </Col>
-              <Col xs={24}>
-                <Form.Item name={["screening", "UTI"]} valuePropName="checked">
-                  <Checkbox>UTI (dipstick urine test) (urine lab)</Checkbox>
-                </Form.Item>
-              </Col>
-              <Col xs={24}>
-                <Form.Item name={["screening", "OGTT"]} valuePropName="checked">
-                  <Checkbox>OGTT (pregnant) (Obs & Gyn / Labs)</Checkbox>
+                  <Checkbox>Diabetes screening</Checkbox>
                 </Form.Item>
               </Col>
             </Row>

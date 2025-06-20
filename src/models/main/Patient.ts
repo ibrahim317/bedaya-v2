@@ -61,13 +61,9 @@ const ChildFamilyHistorySchema: Schema<ChildFamilyHistory> = new Schema(
 );
 const ScreeningSchema: Schema<Screening> = new Schema(
   {
-    nephropathy: { type: Boolean, default: false },
-    UTI: { type: Boolean, default: false },
-    OGTT: { type: Boolean, default: false },
     rickets: { type: Boolean, default: false },
-    anemia: { type: Boolean, default: false },
     parasites: { type: Boolean, default: false },
-    DM: { type: Boolean, default: false },
+    diabetes: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -380,7 +376,7 @@ const PatientLabTestResultSchema: Schema<PatientLabTestResult> = new Schema(
 
 const PatientLabTestSchema: Schema<PatientLabTest> = new Schema(
   {
-    labTestName: { type: String, enum: ["Urine", "Blood", "Stool"] },
+    labTestName: { type: String, enum: ["Urine", "Blood", "Stool", "Albumin-Creat"] },
     status: {
       type: String,
       enum: Object.values(PatientLabTestStatus),

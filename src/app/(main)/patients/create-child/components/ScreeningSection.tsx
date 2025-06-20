@@ -14,21 +14,10 @@ const ScreeningSection = () => {
           </Form.Item>
         </Col>
         <Col >
-          <Form.Item name={["screening", "UTI"]} valuePropName="checked">
-            <Checkbox>Anemia screening(2 - 5y)</Checkbox>
-          </Form.Item>
-        </Col>
-        <Col >
           <Form.Item name={["screening", "OGTT"]} valuePropName="checked">
             <Checkbox>Parasites screening</Checkbox>
           </Form.Item>
         </Col>
-        <Col >
-          <Form.Item name={["screening", "DM"]} valuePropName="checked">
-            <Checkbox>DM screening(Hb A1c)</Checkbox>
-          </Form.Item>
-        </Col>
-        
       </Row>
     </div>
   );

@@ -11,6 +11,7 @@ import {
   HomeOutlined,
   ExperimentOutlined,
   FileTextOutlined,
+  BookOutlined,
 } from "@ant-design/icons";
 
 // Define menu item interface for type safety
@@ -60,6 +61,21 @@ const ADMIN_MENU_ITEMS: MenuItem[] = [
     key: "/clinics-management",
     icon: <HomeOutlined />,
     label: <Link href="/clinics-management">Clinics Management</Link>,
+  },
+  {
+    key: "/query-builder",
+    icon: <FileTextOutlined />,
+    label: <Link href="/query-builder">Query Builder</Link>,
+  },
+  {
+    key: "/reports-management",
+    icon: <FileTextOutlined />,
+    label: <Link href="/reports-management">Reports Management</Link>,
+  },
+  {
+    key: "/reports",
+    icon: <BookOutlined />,
+    label: <Link href="/reports">Reports</Link>,
   },
 ];
 

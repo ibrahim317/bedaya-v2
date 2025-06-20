@@ -85,7 +85,7 @@ const LabsPage = () => {
 
   const handleStatusChange = async (
     patientId: string,
-    labTestName: "Urine" | "Blood" | "Stool",
+    labTestName: "Urine" | "Blood" | "Stool" | "Albumin-Creat",
     status: PatientLabTestStatus,
     type: "adult" | "child"
   ) => {
@@ -148,13 +148,13 @@ const LabsPage = () => {
 
   const handleSetResult = (
     patientId: string,
-    testType: "Stool" | "Urine" | "Blood"
+    testType: "Stool" | "Urine" | "Blood" | "Albumin-Creat"
   ) => {
     router.push(`/labs/${testType.toLowerCase()}?patientId=${patientId}`);
   };
 
   const getStatusColumn = (
-    labTestName: "Urine" | "Blood" | "Stool",
+    labTestName: "Urine" | "Blood" | "Stool" | "Albumin-Creat",
     type: "adult" | "child"
   ) => ({
     title: labTestName,
@@ -207,6 +207,7 @@ const LabsPage = () => {
         getStatusColumn("Stool", type),
         getStatusColumn("Urine", type),
         getStatusColumn("Blood", type),
+        getStatusColumn("Albumin-Creat", type),
       ],
     },
     {
@@ -215,7 +216,7 @@ const LabsPage = () => {
       width: "20%",
       render: (record: IPatient) => (
         <div className="flex flex-col gap-2 items-start">
-          {(["Stool", "Urine", "Blood"] as const).map((labName) => {
+          {(["Stool", "Urine", "Blood", "Albumin-Creat"] as const).map((labName) => {
             const test = record.labTest?.find(
               (t) => t.labTestName === labName
             );

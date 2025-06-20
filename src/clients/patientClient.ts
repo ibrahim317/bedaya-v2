@@ -100,7 +100,7 @@ export async function searchPatients(search: string) {
 export const updateLabTest = async (
   patientId: string,
   data: {
-    labTestName: "Urine" | "Blood" | "Stool";
+    labTestName: "Urine" | "Blood" | "Stool" | "Albumin-Creat";
     status: PatientLabTestStatus;
     results?: PatientLabTestResult[];
   }

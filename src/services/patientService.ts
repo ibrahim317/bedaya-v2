@@ -62,7 +62,7 @@ export const patientService = {
 
 export const updatePatientLabTest = async (
   patientId: string,
-  labTestName: "Urine" | "Blood" | "Stool",
+  labTestName: "Urine" | "Blood" | "Stool" | "Albumin-Creat",
   status: PatientLabTestStatus,
   results?: PatientLabTestResult[]
 ) => {
