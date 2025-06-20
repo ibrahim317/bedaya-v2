@@ -8,4 +8,16 @@ export interface DashboardStats {
     date: string;
     count: number;
   }[];
+  adultPatientCount: number;
+  childPatientCount: number;
+  labTestStats: {
+    [patientType: string]: {
+      [labTestName: string]: {
+        total: number;
+        statuses: {
+          [status: string]: number;
+        };
+      };
+    };
+  };
 } 
