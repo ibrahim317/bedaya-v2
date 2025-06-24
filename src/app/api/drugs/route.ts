@@ -7,8 +7,11 @@ export async function GET(request: NextRequest) {
         const action = searchParams.get('action');
     
         if (action === 'all') {
-          const drugs = await drugService.findAll();
-          return NextResponse.json(drugs);
+            const page = parseInt(searchParams.get('page') || '1', 10);
+            const limit = parseInt(searchParams.get('limit') || '10', 10);
+            const search = searchParams.get('search') || '';
+            const paginatedData = await drugService.findAllPaginated(page, limit, search);
+            return NextResponse.json(paginatedData);
         }
     
         if (action === 'byId') {
@@ -61,16 +64,15 @@ export async function POST(req: NextRequest) {
     const { 
       barcode,          // barcode
       name,
-      quantity,       // number of strips
+      quantityByPills,       // number of strips
       stripsPerBox,     // strips per box
       pillsPerStrip,    // pills per strip
       sample = false,
       expiryDate,
-      remains = ""
     } = body;
 
     // Validate required fields
-    if (!barcode || !name || !quantity || !stripsPerBox || !pillsPerStrip || !expiryDate) {
+    if (!barcode || !name || !quantityByPills || !stripsPerBox || !pillsPerStrip || !expiryDate) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -81,7 +83,7 @@ export async function POST(req: NextRequest) {
     if (
       typeof barcode !== 'string' ||
       typeof name !== 'string' ||
-      typeof quantity !== 'number' ||
+      typeof quantityByPills !== 'number' ||
       typeof stripsPerBox !== 'number' ||
       typeof pillsPerStrip !== 'number' ||
       typeof sample !== 'boolean' ||
@@ -94,7 +96,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Calculate total quantity in strips
-    const totalStrips = (quantity * stripsPerBox);
+    const totalStrips = (quantityByPills * stripsPerBox);
     
     // Calculate total pills
     const totalPills = totalStrips * pillsPerStrip;
@@ -107,7 +109,6 @@ export async function POST(req: NextRequest) {
       pillsPerStrip,
       sample,
       expiryDate: new Date(expiryDate),
-      remains
     };
 
     const drug = await drugService.create(data);

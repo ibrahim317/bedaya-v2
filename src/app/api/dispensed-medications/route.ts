@@ -11,6 +11,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
 
+    for (const med of medications) {
+      if (
+        !med.drug ||
+        !med.drug.name ||
+        !med.drug.barcode ||
+        !med.drug.expiryDate ||
+        !med.quantity ||
+        !med.quantityType ||
+        !med.remaining
+      ) {
+        return NextResponse.json({ message: 'Invalid medication data provided' }, { status: 400 });
+      }
+    }
+
     const newDispensedMedication = await createDispensedMedication(body);
 
     return NextResponse.json(newDispensedMedication, { status: 201 });

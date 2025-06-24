@@ -1,7 +1,8 @@
 import DispensedMedication from '@/models/main/DispensedMedication';
 import Drug from '@/models/main/Drug';
-import { IDispensedMedication, DispensedMedicationData } from '@/types/DispensedMedication';
+import { IDispensedMedication, DispensedMedicationData, IPopulatedDispensedMedication } from '@/types/DispensedMedication';
 import { connectDB } from '@/lib/db';
+import { IPatient } from '@/types/Patient';
 
 export async function createDispensedMedication(
   data: DispensedMedicationData
@@ -15,18 +16,18 @@ export async function createDispensedMedication(
 
     // Update drug quantities
     for (const med of data.medications) {
-      const drug = await Drug.findById(med.drug);
+      const drug = await Drug.findOne({ barcode: med.drug.barcode });
       if (!drug) {
-        throw new Error(`Drug with ID ${med.drug} not found`);
+        throw new Error(`Drug with barcode ${med.drug.barcode} not found`);
       }
-      if (drug.quantity < med.quantity) {
+      if (drug.quantityByPills < med.remaining) {
         throw new Error(`Not enough stock for drug ${drug.name}`);
       }
-      drug.quantity -= med.quantity;
+      drug.quantityByPills -= med.remaining;
       if (drug.dailyConsumption) {
-        drug.dailyConsumption[0] += med.quantity;
+        drug.dailyConsumption[0] += med.remaining;
       } else {
-        drug.dailyConsumption = [med.quantity];
+        drug.dailyConsumption = [med.remaining];
       }
       await drug.save();
     }
@@ -72,11 +73,11 @@ export async function updateDispensedMedication(
 
     // Revert the previous drug quantities
     for (const med of existingRecord.medications) {
-      const drug = await Drug.findById(med.drug);
+      const drug = await Drug.findOne({ barcode: med.drug.barcode });
       if (drug) {
-        drug.quantity += med.quantity;
-        if (drug.dailyConsumption && drug.dailyConsumption[0] >= med.quantity) {
-          drug.dailyConsumption[0] -= med.quantity;
+        drug.quantityByPills += med.remaining;
+        if (drug.dailyConsumption && drug.dailyConsumption[0] >= med.remaining) {
+          drug.dailyConsumption[0] -= med.remaining;
         }
         await drug.save();
       }
@@ -84,18 +85,18 @@ export async function updateDispensedMedication(
 
     // Apply the new drug quantities
     for (const med of data.medications) {
-      const drug = await Drug.findById(med.drug);
+      const drug = await Drug.findOne({ barcode: med.drug.barcode });
       if (!drug) {
-        throw new Error(`Drug with ID ${med.drug} not found`);
+        throw new Error(`Drug with barcode ${med.drug.barcode} not found`);
       }
-      if (drug.quantity < med.quantity) {
+      if (drug.quantityByPills < med.remaining) {
         throw new Error(`Not enough stock for drug ${drug.name}`);
       }
-      drug.quantity -= med.quantity;
+      drug.quantityByPills -= med.remaining;
       if (drug.dailyConsumption) {
-        drug.dailyConsumption[0] += med.quantity;
+        drug.dailyConsumption[0] += med.remaining;
       } else {
-        drug.dailyConsumption = [med.quantity];
+        drug.dailyConsumption = [med.remaining];
       }
       await drug.save();
     }
@@ -127,11 +128,11 @@ export async function deleteDispensedMedication(id: string): Promise<void> {
 
     // Revert the drug quantities
     for (const med of record.medications) {
-      const drug = await Drug.findById(med.drug);
+      const drug = await Drug.findOne({ barcode: med.drug.barcode });
       if (drug) {
-        drug.quantity += med.quantity;
-        if (drug.dailyConsumption && drug.dailyConsumption[0] >= med.quantity) {
-          drug.dailyConsumption[0] -= med.quantity;
+        drug.quantityByPills += med.remaining;
+        if (drug.dailyConsumption && drug.dailyConsumption[0] >= med.remaining) {
+          drug.dailyConsumption[0] -= med.remaining;
         }
         await drug.save();
       }
@@ -146,3 +147,78 @@ export async function deleteDispensedMedication(id: string): Promise<void> {
     throw new Error('Failed to delete dispensed medication');
   }
 }
+
+export type PaginatedDispensedMedications = {
+  medications: IPopulatedDispensedMedication[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+export const dispensedMedicationService = {
+  async findAllPaginated(
+    page: number,
+    limit: number,
+    search?: string
+  ): Promise<PaginatedDispensedMedications> {
+    await connectDB();
+
+    const pipeline: any[] = [];
+
+    // Populate patient information
+    pipeline.push({
+      $lookup: {
+        from: 'patients',
+        localField: 'patientId',
+        foreignField: '_id',
+        as: 'patientInfo',
+      },
+    });
+
+    pipeline.push({
+      $unwind: '$patientInfo',
+    });
+    
+    // Search functionality
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'patientInfo.name': { $regex: search, $options: 'i' } },
+            { 'patientInfo.code': { $regex: search, $options: 'i' } },
+          ],
+        },
+      });
+    }
+
+    // Count total documents
+    const countPipeline = [...pipeline];
+    countPipeline.push({ $count: 'total' });
+    const countResult = await DispensedMedication.aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
+
+    // Add sorting, skipping, and limiting for pagination
+    pipeline.push({ $sort: { createdAt: -1 } });
+    pipeline.push({ $skip: (page - 1) * limit });
+    pipeline.push({ $limit: limit });
+
+    const medications = await DispensedMedication.aggregate(pipeline);
+    
+    const populatedMedications: IPopulatedDispensedMedication[] = medications.map(med => ({
+      ...med,
+      _id: med._id.toString(),
+      patientId: {
+        _id: med.patientInfo._id.toString(),
+        name: med.patientInfo.name,
+        code: med.patientInfo.code,
+      }
+    }));
+
+    return {
+      medications: populatedMedications,
+      total,
+      page,
+      limit,
+    };
+  },
+};

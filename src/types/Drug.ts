@@ -8,7 +8,6 @@ export interface IDrug {
   pillsPerStrip: number;
   sample: boolean;
   expiryDate: Date | string;
-  remains?: string;
   dailyConsumption?:number[];  // count of drugs consumed par day
 
  // Timestamps

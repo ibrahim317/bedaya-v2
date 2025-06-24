@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Form, Button, Select, InputNumber, Space, Card, Row, Col, Typography, message, Table, Modal, Popconfirm } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
@@ -20,6 +20,7 @@ export default function DispenseTreatmentPage() {
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [patients, setPatients] = useState<IPatient[]>([]);
   const [drugs, setDrugs] = useState<IDrugWithId[]>([]);
@@ -37,10 +38,10 @@ export default function DispenseTreatmentPage() {
         setLoading(true);
         const [patientData, drugData] = await Promise.all([
           searchPatients(''),
-          drugsClient.getAllDrugs()
+          drugsClient.getDrugs(1, 10000, '')
         ]);
         setPatients(patientData.data);
-        setDrugs(drugData);
+        setDrugs(drugData.drugs);
       } catch (error) {
         message.error('Failed to load data');
       } finally {
@@ -50,35 +51,51 @@ export default function DispenseTreatmentPage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const patientIdFromUrl = searchParams.get('patientId');
+    if (patientIdFromUrl && patients.length > 0) {
+      form.setFieldsValue({ patientId: patientIdFromUrl });
+      handlePatientChange(patientIdFromUrl);
+    }
+  }, [searchParams, patients, form]);
+
   const onFinish = async (values: any) => {
     try {
       const processedMedications = values.medications.map((med: any) => {
         const selectedDrug = drugs.find(d => d._id === med.drug);
-        if (!selectedDrug) return med;
+        if (!selectedDrug) {
+          throw new Error('Selected drug not found');
+        }
 
-        let quantityInPills = med.quantity;
-        if (med.unit === 'box') {
-          quantityInPills = med.quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
-        } else if (med.unit === 'strip') {
-          quantityInPills = med.quantity * (selectedDrug.pillsPerStrip || 1);
+        let remainingInPills = med.quantity;
+        if (med.unit === 'boxes') {
+          remainingInPills = med.quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
+        } else if (med.unit === 'strips') {
+          remainingInPills = med.quantity * (selectedDrug.pillsPerStrip || 1);
         }
         
         return {
-          ...med,
-          quantity: quantityInPills,
+          drug: {
+            name: selectedDrug.name,
+            barcode: selectedDrug.barcode,
+            expiryDate: selectedDrug.expiryDate,
+          },
+          quantity: med.quantity,
+          quantityType: med.unit,
+          remaining: remainingInPills,
         };
       });
 
       const submissionData = {
-        ...values,
-        medications: processedMedications.map(({ unit, ...rest }: { unit?: string }) => rest), // remove unit before submission
+        patientId: values.patientId,
+        medications: processedMedications,
       };
       
       await dispensedMedicationsClient.create(submissionData);
       message.success('Treatment dispensed successfully!');
-      router.push('/pharmacy');
+      router.push('/pharmacy/dispense');
     } catch (error) {
-      message.error('Failed to dispense treatment');
+      message.error(error instanceof Error ? error.message : 'Failed to dispense treatment');
     }
   };
 
@@ -99,11 +116,11 @@ export default function DispenseTreatmentPage() {
     }
   };
 
-  const handleDrugChange = (value: string, fieldKey: number) => {
-    const medications = form.getFieldValue('medications');
+  const handleDrugChange = (formInstance: typeof form | typeof editForm, fieldKey: number) => {
+    const medications = formInstance.getFieldValue('medications');
     if (medications[fieldKey]) {
-      medications[fieldKey].unit = 'pill';
-      form.setFieldsValue({ medications });
+      medications[fieldKey].unit = 'pills';
+      formInstance.setFieldsValue({ medications });
     }
   };
 
@@ -124,14 +141,16 @@ export default function DispenseTreatmentPage() {
   const handleEdit = (record: IPopulatedDispensedMedication) => {
     setCurrentEditRecord(record);
     
-    // Transform the data for the form
     const initialValues = {
       patientId: record.patientId,
-      medications: record.medications.map(med => ({
-        drug: med.drug._id,
-        quantity: med.quantity,
-        unit: 'pill' 
-      }))
+      medications: record.medications.map(med => {
+        const drugInState = drugs.find(d => d.barcode === med.drug.barcode);
+        return {
+          drug: drugInState?._id,
+          quantity: med.quantity,
+          unit: med.quantityType
+        };
+      })
     };
     
     editForm.setFieldsValue(initialValues);
@@ -143,7 +162,7 @@ export default function DispenseTreatmentPage() {
       setHistoryLoading(true);
       await dispensedMedicationsClient.delete(String(recordId));
       message.success('Medication record deleted successfully');
-      refreshMedicationHistory();
+      await refreshMedicationHistory();
     } catch (error) {
       message.error('Failed to delete medication record');
     } finally {
@@ -160,32 +179,40 @@ export default function DispenseTreatmentPage() {
       
       const processedMedications = values.medications.map((med: any) => {
         const selectedDrug = drugs.find(d => d._id === med.drug);
-        if (!selectedDrug) return med;
+        if (!selectedDrug) {
+          throw new Error('Selected drug not found');
+        }
         
-        let quantityInPills = med.quantity;
-        if (med.unit === 'box') {
-          quantityInPills = med.quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
-        } else if (med.unit === 'strip') {
-          quantityInPills = med.quantity * (selectedDrug.pillsPerStrip || 1);
+        let remainingInPills = med.quantity;
+        if (med.unit === 'boxes') {
+          remainingInPills = med.quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
+        } else if (med.unit === 'strips') {
+          remainingInPills = med.quantity * (selectedDrug.pillsPerStrip || 1);
         }
 
         return {
-          ...med,
-          quantity: quantityInPills,
+          drug: {
+            name: selectedDrug.name,
+            barcode: selectedDrug.barcode,
+            expiryDate: selectedDrug.expiryDate,
+          },
+          quantity: med.quantity,
+          quantityType: med.unit,
+          remaining: remainingInPills,
         };
       });
 
       const submissionData = {
-        ...values,
-        medications: processedMedications.map(({ unit, ...rest }: { unit?: string }) => rest),
+        patientId: values.patientId,
+        medications: processedMedications,
       };
       
       await dispensedMedicationsClient.update(String(currentEditRecord._id), submissionData);
       message.success('Medication record updated successfully');
       setIsEditModalVisible(false);
-      refreshMedicationHistory();
+      await refreshMedicationHistory();
     } catch (error) {
-      message.error('Failed to update medication record');
+      message.error(error instanceof Error ? error.message : 'Failed to update medication record');
     } finally {
       setEditLoading(false);
     }
@@ -236,13 +263,136 @@ export default function DispenseTreatmentPage() {
   ];
 
   const expandedRowRender = (record: IPopulatedDispensedMedication) => {
-    const columns: ColumnsType<{ drug: IDrugWithId; quantity: number; }> = [
+    const columns: ColumnsType<(typeof record.medications)[0]> = [
       { title: 'Drug Name', dataIndex: ['drug', 'name'], key: 'drugName' },
       { title: 'Quantity', dataIndex: 'quantity', key: 'quantity' },
+      { title: 'Unit', dataIndex: 'quantityType', key: 'quantityType' },
+      { title: 'Total Pills', dataIndex: 'remaining', key: 'remaining' },
     ];
 
-    return <Table columns={columns} dataSource={record.medications} pagination={false} rowKey={(med) => med.drug._id} />;
+    return <Table columns={columns} dataSource={record.medications} pagination={false} rowKey={(med) => med.drug.barcode} />;
   };
+
+  const renderMedicationFormList = (formInstance: typeof form | typeof editForm) => (
+    <Form.List name="medications">
+      {(fields, { add, remove }) => (
+        <>
+          {fields.map(({ key, name, ...restField }) => (
+            <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+              <Form.Item
+                {...restField}
+                name={[name, 'drug']}
+                rules={[{ required: true, message: 'Missing drug' }]}
+                style={{ minWidth: '300px' }}
+              >
+                <Select
+                  showSearch
+                  placeholder="Select a drug by name or barcode"
+                  optionFilterProp="children"
+                  loading={loading}
+                  filterOption={(input, option) =>
+                    (option?.label ? String(option.label).toLowerCase().includes(input.toLowerCase()) : false)
+                  }
+                  onChange={() => handleDrugChange(formInstance, key)}
+                >
+                  {drugs.map(d => (
+                    <Option key={d._id as string} value={d._id as string} label={`${d.name} (${d.barcode})`}>
+                      {d.name} ({d.barcode})
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              <Form.Item
+                {...restField}
+                name={[name, 'quantity']}
+                rules={[{ required: true, message: 'Missing quantity' }]}
+              >
+                <InputNumber min={1} placeholder="Quantity" />
+              </Form.Item>
+
+              <Form.Item
+                noStyle
+                shouldUpdate={(prevValues, currentValues) =>
+                  prevValues.medications?.[name]?.drug !== currentValues.medications?.[name]?.drug
+                }
+              >
+                {({ getFieldValue }) => {
+                  const drugId = getFieldValue(['medications', name, 'drug']);
+                  const selectedDrug = drugs.find(d => d._id === drugId);
+                  
+                  if (!selectedDrug) return null;
+
+                  const hasStrips = selectedDrug.pillsPerStrip && selectedDrug.pillsPerStrip > 1;
+                  const hasBoxes = selectedDrug.stripsPerBox && selectedDrug.stripsPerBox > 1;
+
+                  if (!hasStrips && !hasBoxes) {
+                    return <div style={{width: 100}}/>;
+                  }
+
+                  return (
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'unit']}
+                      initialValue="pills"
+                      noStyle
+                    >
+                      <Select style={{ width: 100 }}>
+                        <Option value="pills">Pill</Option>
+                        {hasStrips && <Option value="strips">Strip</Option>}
+                        {hasBoxes && <Option value="boxes">Box</Option>}
+                      </Select>
+                    </Form.Item>
+                  );
+                }}
+              </Form.Item>
+
+              <Form.Item
+                noStyle
+                shouldUpdate={(prevValues, currentValues) =>
+                  prevValues.medications?.[name]?.unit !== currentValues.medications?.[name]?.unit ||
+                  prevValues.medications?.[name]?.quantity !== currentValues.medications?.[name]?.quantity ||
+                  prevValues.medications?.[name]?.drug !== currentValues.medications?.[name]?.drug
+                }
+              >
+                {({ getFieldValue }) => {
+                  const unit = getFieldValue(['medications', name, 'unit']);
+                  const quantity = getFieldValue(['medications', name, 'quantity']) || 0;
+                  const drugId = getFieldValue(['medications', name, 'drug']);
+                  const selectedDrug = drugs.find(d => d._id === drugId);
+                  
+                  if (!selectedDrug || !unit || quantity === 0) return null;
+                  
+                  let totalPills = quantity;
+                  if (unit === 'boxes') {
+                    totalPills = quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
+                  } else if (unit === 'strips') {
+                    totalPills = quantity * (selectedDrug.pillsPerStrip || 1);
+                  }
+
+                  if (unit !== 'pills') {
+                    return (
+                      <Typography.Text>
+                        ({totalPills} pills)
+                      </Typography.Text>
+                    );
+                  }
+                  
+                  return null;
+                }}
+              </Form.Item>
+              
+              <MinusCircleOutlined onClick={() => remove(name)} />
+            </Space>
+          ))}
+          <Form.Item>
+            <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+              Add Drug
+            </Button>
+          </Form.Item>
+        </>
+      )}
+    </Form.List>
+  );
 
   return (
     <div className="p-6">
@@ -280,122 +430,7 @@ export default function DispenseTreatmentPage() {
 
           <Title level={4} className="mt-8">Medications</Title>
 
-          <Form.List name="medications">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                    <Form.Item
-                      {...restField}
-                      name={[name, 'drug']}
-                      rules={[{ required: true, message: 'Missing drug' }]}
-                      style={{ minWidth: '300px' }}
-                    >
-                      <Select
-                        showSearch
-                        placeholder="Select a drug by name or barcode"
-                        optionFilterProp="children"
-                        loading={loading}
-                        filterOption={(input, option) =>
-                          (option?.label ? String(option.label).toLowerCase().includes(input.toLowerCase()) : false)
-                        }
-                        onChange={(value) => handleDrugChange(value, key)}
-                      >
-                        {drugs.map(d => (
-                          <Option key={d._id as string} value={d._id as string} label={`${d.name} (${d.barcode})`}>
-                            {d.name} ({d.barcode})
-                          </Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[name, 'quantity']}
-                      rules={[{ required: true, message: 'Missing quantity' }]}
-                    >
-                      <InputNumber min={1} placeholder="Quantity" />
-                    </Form.Item>
-
-                    <Form.Item
-                      noStyle
-                      shouldUpdate={(prevValues, currentValues) =>
-                        prevValues.medications?.[name]?.drug !== currentValues.medications?.[name]?.drug ||
-                        prevValues.medications?.[name]?.unit !== currentValues.medications?.[name]?.unit
-                      }
-                    >
-                      {({ getFieldValue }) => {
-                        const drugId = getFieldValue(['medications', name, 'drug']);
-                        const selectedDrug = drugs.find(d => d._id === drugId);
-                        
-                        if (!selectedDrug) return null;
-
-                        const hasStrips = selectedDrug.pillsPerStrip > 1;
-                        const hasBoxes = selectedDrug.stripsPerBox > 1;
-
-                        if (!hasStrips && !hasBoxes) return null;
-
-                        return (
-                          <Form.Item
-                            {...restField}
-                            name={[name, 'unit']}
-                            initialValue="pill"
-                            noStyle
-                          >
-                            <Select style={{ width: 100 }}>
-                              <Option value="pill">Pill</Option>
-                              {hasStrips && <Option value="strip">Strip</Option>}
-                              {hasBoxes && <Option value="box">Box</Option>}
-                            </Select>
-                          </Form.Item>
-                        );
-                      }}
-                    </Form.Item>
-
-                    <Form.Item
-                      noStyle
-                      shouldUpdate={(prevValues, currentValues) =>
-                        prevValues.medications?.[name]?.unit !== currentValues.medications?.[name]?.unit ||
-                        prevValues.medications?.[name]?.quantity !== currentValues.medications?.[name]?.quantity
-                      }
-                    >
-                      {({ getFieldValue }) => {
-                        const unit = getFieldValue(['medications', name, 'unit']);
-                        const quantity = getFieldValue(['medications', name, 'quantity']) || 0;
-                        const drugId = getFieldValue(['medications', name, 'drug']);
-                        const selectedDrug = drugs.find(d => d._id === drugId);
-                        
-                        if (!selectedDrug) return null;
-
-                        let totalPills = 0;
-                        if (unit === 'box') {
-                          totalPills = quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
-                        } else if (unit === 'strip') {
-                          totalPills = quantity * (selectedDrug.pillsPerStrip || 1);
-                        }
-
-                        if (totalPills > 0 && unit !== 'pill') {
-                          return (
-                            <Form.Item label="Total Pills">
-                              <InputNumber value={totalPills} readOnly />
-                            </Form.Item>
-                          );
-                        }
-                        
-                        return null;
-                      }}
-                    </Form.Item>
-                    
-                    <MinusCircleOutlined onClick={() => remove(name)} />
-                  </Space>
-                ))}
-                <Form.Item>
-                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                    Add Drug
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
+          {renderMedicationFormList(form)}
 
           <Form.Item className="mt-8">
             <Space>
@@ -470,120 +505,7 @@ export default function DispenseTreatmentPage() {
             </Select>
           </Form.Item>
 
-          <Form.List name="medications">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                    <Form.Item
-                      {...restField}
-                      name={[name, 'drug']}
-                      rules={[{ required: true, message: 'Missing drug' }]}
-                      style={{ minWidth: '300px' }}
-                    >
-                      <Select
-                        showSearch
-                        placeholder="Select a drug by name or barcode"
-                        optionFilterProp="children"
-                        filterOption={(input, option) =>
-                          (option?.label ? String(option.label).toLowerCase().includes(input.toLowerCase()) : false)
-                        }
-                        onChange={(value) => handleDrugChange(value, key)}
-                      >
-                        {drugs.map(d => (
-                          <Option key={d._id as string} value={d._id as string} label={`${d.name} (${d.barcode})`}>
-                            {d.name} ({d.barcode})
-                          </Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[name, 'quantity']}
-                      rules={[{ required: true, message: 'Missing quantity' }]}
-                    >
-                      <InputNumber min={1} placeholder="Quantity" />
-                    </Form.Item>
-
-                    <Form.Item
-                      noStyle
-                      shouldUpdate={(prevValues, currentValues) =>
-                        prevValues.medications?.[name]?.drug !== currentValues.medications?.[name]?.drug ||
-                        prevValues.medications?.[name]?.unit !== currentValues.medications?.[name]?.unit
-                      }
-                    >
-                      {({ getFieldValue }) => {
-                        const drugId = getFieldValue(['medications', name, 'drug']);
-                        const selectedDrug = drugs.find(d => d._id === drugId);
-                        
-                        if (!selectedDrug) return null;
-
-                        const hasStrips = selectedDrug.pillsPerStrip > 1;
-                        const hasBoxes = selectedDrug.stripsPerBox > 1;
-
-                        if (!hasStrips && !hasBoxes) return null;
-
-                        return (
-                          <Form.Item
-                            {...restField}
-                            name={[name, 'unit']}
-                            initialValue="pill"
-                            noStyle
-                          >
-                            <Select style={{ width: 100 }}>
-                              <Option value="pill">Pill</Option>
-                              {hasStrips && <Option value="strip">Strip</Option>}
-                              {hasBoxes && <Option value="box">Box</Option>}
-                            </Select>
-                          </Form.Item>
-                        )
-                      }}
-                    </Form.Item>
-
-                    <Form.Item
-                      noStyle
-                      shouldUpdate={(prevValues, currentValues) =>
-                        prevValues.medications?.[name]?.unit !== currentValues.medications?.[name]?.unit ||
-                        prevValues.medications?.[name]?.quantity !== currentValues.medications?.[name]?.quantity
-                      }
-                    >
-                      {({ getFieldValue }) => {
-                        const unit = getFieldValue(['medications', name, 'unit']);
-                        const quantity = getFieldValue(['medications', name, 'quantity']) || 0;
-                        const drugId = getFieldValue(['medications', name, 'drug']);
-                        const selectedDrug = drugs.find(d => d._id === drugId);
-                        
-                        if (!selectedDrug) return null;
-
-                        let totalPills = 0;
-                        if (unit === 'box') {
-                          totalPills = quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
-                        } else if (unit === 'strip') {
-                          totalPills = quantity * (selectedDrug.pillsPerStrip || 1);
-                        }
-
-                        if (totalPills > 0 && unit !== 'pill') {
-                          return (
-                            <Form.Item label="Total Pills">
-                              <InputNumber value={totalPills} readOnly />
-                            </Form.Item>
-                          );
-                        }
-                        return null;
-                      }}
-                    </Form.Item>
-                    
-                    <MinusCircleOutlined onClick={() => remove(name)} />
-                  </Space>
-                ))}
-                <Form.Item>
-                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                    Add Drug
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
+          {renderMedicationFormList(editForm)}
         </Form>
       </Modal>
     </div>

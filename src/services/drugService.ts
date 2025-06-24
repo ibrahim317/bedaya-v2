@@ -3,10 +3,45 @@ import { IDrug, IDrugWithId } from '@/types/Drug';
 import { connectDB }from '@/lib/db';
 import { Document } from 'mongoose';
 
+export type PaginatedDrugs = {
+    drugs: IDrugWithId[];
+    total: number;
+    page: number;
+    limit: number;
+};
 
 export type DrugData = Omit<IDrug, 'createdAt' | 'updatedAt' | 'dailyConsumption'>;
 
 export const drugService = {
+
+    async findAllPaginated(
+        page: number,
+        limit: number,
+        search?: string,
+      ): Promise<PaginatedDrugs> {
+        await connectDB();
+    
+        const query: any = {};
+        if (search) {
+          query.$or = [
+            { name: { $regex: search, $options: 'i' } },
+            { barcode: { $regex: search, $options: 'i' } },
+          ];
+        }
+    
+        const total = await Drug.countDocuments(query);
+        const drugs = await Drug.find(query)
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .lean();
+    
+        return {
+          drugs: drugs.map(d => ({ ...d, _id: d._id.toString() })) as IDrugWithId[],
+          total,
+          page,
+          limit,
+        };
+      },
 
     async findAll():Promise<IDrugWithId[]> {
         await connectDB();

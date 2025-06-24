@@ -1,8 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   Button,
@@ -14,268 +13,247 @@ import {
   Col,
   Row,
   Card,
-} from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { DeleteOutlined, EditOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
-import { IDrug } from '@/types/Drug';
-import { drugsClient } from '@/clients/drugsClient';
-import type { FormattedDrug } from '@/clients/drugsClient';
+  Tabs,
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  ExclamationCircleOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+import { drugsClient, FormattedDrug, PaginatedDrugs } from "@/clients/drugsClient";
+import { dispensedMedicationsClient } from "@/clients/dispensedMedicationsClient";
+import { IPopulatedDispensedMedication } from "@/types/DispensedMedication";
+import { useDebounce } from "use-debounce";
 
 const { Title } = Typography;
 const { Search } = Input;
+const { TabPane } = Tabs;
 const { confirm } = Modal;
 
 export default function PharmacyPage() {
   const router = useRouter();
-  const [Drugs, setDrugs] = useState<FormattedDrug[]>([]);
-  const [searchText, setSearchText] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [filteredDrugs, setFilteredDrugs] = useState<FormattedDrug[]>([]);
-  const [messageApi, contextHolder] = message.useMessage();
-  const messageApiRef = useRef(messageApi);
+  const [activeTab, setActiveTab] = useState("drugs");
 
-  useEffect(() => {
-    messageApiRef.current = messageApi;
-  }, [messageApi]);
-
-  useEffect(() => {
-    const fetchDrugs = async () => {
-      try {
-        const data = await drugsClient.getAllDrugs();
-        setDrugs(data);
-        setFilteredDrugs(data);
-      } catch (error) {
-        messageApiRef.current?.error('Failed to fetch drugs');
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (loading) {
-      fetchDrugs();
-    }
+  // Drugs state
+  const [drugs, setDrugs] = useState<FormattedDrug[]>([]);
+  const [drugsLoading, setDrugsLoading] = useState(true);
+  const [drugsSearchText, setDrugsSearchText] = useState("");
+  const [debouncedDrugsSearch] = useDebounce(drugsSearchText, 500);
+  const [drugsPagination, setDrugsPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
   });
 
-  useEffect(() => {
-    const filtered = Drugs.filter(
-      (drug) =>
-        drug.barcode?.toLowerCase().includes(searchText?.toLowerCase()) ||
-        drug.name?.toLowerCase().includes(searchText?.toLowerCase())
-    );
-    setFilteredDrugs(filtered);
-  }, [searchText, Drugs]);
+  // Treatments state
+  const [treatments, setTreatments] = useState<IPopulatedDispensedMedication[]>([]);
+  const [treatmentsLoading, setTreatmentsLoading] = useState(true);
+  const [treatmentsSearchText, setTreatmentsSearchText] = useState("");
+  const [debouncedTreatmentsSearch] = useDebounce(treatmentsSearchText, 500);
+  const [treatmentsPagination, setTreatmentsPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
+  const messageApiRef = useRef(message.useMessage()[0]);
+
+  const fetchDrugs = async (page = 1, pageSize = 10, search = "") => {
+    try {
+      setDrugsLoading(true);
+      const data: PaginatedDrugs = await drugsClient.getDrugs(page, pageSize, search);
+      setDrugs(data.drugs);
+      setDrugsPagination(prev => ({ ...prev, total: data.total, current: page, pageSize }));
+    } catch (error) {
+      messageApiRef.current?.error("Failed to fetch drugs");
+    } finally {
+      setDrugsLoading(false);
+    }
+  };
+
+  const fetchTreatments = async (page = 1, pageSize = 10, search = "") => {
+    try {
+      setTreatmentsLoading(true);
+      const data = await dispensedMedicationsClient.getAll(page, pageSize, search);
+      setTreatments(data.medications);
+      setTreatmentsPagination(prev => ({ ...prev, total: data.total, current: page, pageSize }));
+    } catch (error) {
+      messageApiRef.current?.error("Failed to fetch patient treatments");
+    } finally {
+      setTreatmentsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'drugs') {
+      fetchDrugs(drugsPagination.current, drugsPagination.pageSize, debouncedDrugsSearch);
+    }
+  }, [debouncedDrugsSearch, drugsPagination.current, drugsPagination.pageSize, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'treatments') {
+      fetchTreatments(treatmentsPagination.current, treatmentsPagination.pageSize, debouncedTreatmentsSearch);
+    }
+  }, [treatmentsPagination.current, treatmentsPagination.pageSize, activeTab, debouncedTreatmentsSearch]);
+
+  const handleDrugsTableChange = (pagination: any) => {
+    fetchDrugs(pagination.current, pagination.pageSize, drugsSearchText);
+  };
+  
+  const handleTreatmentsTableChange = (pagination: any) => {
+    fetchTreatments(pagination.current, pagination.pageSize, treatmentsSearchText);
   };
 
   const showDeleteConfirm = (drugId: string, drugName: string) => {
     confirm({
-      title: 'Are you sure you want to delete this drug?',
+      title: "Are you sure you want to delete this drug?",
       icon: <ExclamationCircleOutlined />,
       content: `This will permanently delete the drug: ${drugName}`,
-      okText: 'Yes',
-      okType: 'danger',
-      cancelText: 'No',
+      okText: "Yes",
+      okType: "danger",
+      cancelText: "No",
       onOk: async () => {
         try {
           await drugsClient.deleteDrug(drugId);
-          setDrugs((prevDrugs) => prevDrugs.filter((drug) => drug._id !== drugId));
-          messageApiRef.current?.success('Drug deleted successfully');
+          fetchDrugs(drugsPagination.current, drugsPagination.pageSize, drugsSearchText);
+          messageApiRef.current?.success("Drug deleted successfully");
         } catch (error) {
-          messageApiRef.current?.error('Failed to delete drug');
+          messageApiRef.current?.error("Failed to delete drug");
         }
       },
     });
   };
 
-  const columns: ColumnsType<FormattedDrug> = [
+  const drugColumns: ColumnsType<FormattedDrug> = [
+    { title: "BarCode", dataIndex: "barcode", key: "barcode", width: 120 },
+    { title: "Name", dataIndex: "name", key: "name", width: 120 },
+    { title: "Total Pills", dataIndex: "quantityByPills", key: "quantityByPills", width: 100, align: "right" },
+    { title: "Complete Strips", key: "completeStrips", width: 100, align: "right", render: (r) => Math.floor(r.quantityByPills / r.pillsPerStrip) || 0 },
+    { title: "Complete Boxes", key: "completeBoxes", width: 100, align: "right", render: (r) => Math.floor(r.quantityByPills / r.pillsPerStrip / r.stripsPerBox) || 0 },
+    { title: "Strips Per Box", dataIndex: "stripsPerBox", key: "stripsPerBox", width: 100, align: "right" },
+    { title: "Pills Per Strip", dataIndex: "pillsPerStrip", key: "pillsPerStrip", width: 100, align: "right" },
+    { title: "Expiry Date", dataIndex: "expiryDate", key: "expiryDate", render: (date) => date ? new Date(date).toLocaleDateString("en-GB") : "N/A", width: 180 },
     {
-      title: 'BarCode',
-      dataIndex: 'barcode',
-      key: 'barcode',
-      sorter: (a, b) => a.barcode.localeCompare(b.barcode),
-      width: 120,
-    },
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      width: 200,
-    },
-    {
-      title: 'Total Pills',
-      dataIndex: 'quantityByPills',
-      key: 'quantityByPills',
-      width: 100,
-      align: 'right',
-    },
-    {
-      title: 'Complete Strips',
-      key: 'completeStrips',
-      width: 120,
-      align: 'right',
-      render: (record) => Math.floor(record.quantityByPills / record.pillsPerStrip) || 0,
-    },
-    {
-      title: 'Strips Per Box',
-      dataIndex: 'stripsPerBox',
-      key: 'stripsPerBox',
-      width: 100,
-      align: 'right',
-    },
-    {
-      title: 'Pills Per Strip',
-      dataIndex: 'pillsPerStrip',
-      key: 'pillsPerStrip',
-      width: 100,
-      align: 'right',
-    },
-    {
-      title: 'Remains',
-      dataIndex: 'remains',
-      key: 'remains',
-      width: 150,
-      ellipsis: true,
-    },
-    {
-      title: 'Expiry Date',
-      dataIndex: 'expiryDate',
-      key: 'expiryDate',
-      sorter: (a, b) =>
-        a.expiryDate
-          ? b.expiryDate
-            ? new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime()
-            : 0
-          : 0,
-      render: (expiryDate: string) =>
-        expiryDate ? new Date(expiryDate).toLocaleDateString('en-GB') : 'N/A',
-      width: 180,
-    },
-    {
-      title: 'Daily Consumption',
-      children: [
-        {
-          title: 'Day 1',
-          dataIndex: 'dailyConsumption',
-          key: 'day1',
-          render: (DailyConsumption: number[]) => DailyConsumption?.[0] || '0',
-          width: 80,
-          align: 'right',
-        },
-        {
-          title: 'Day 2',
-          dataIndex: 'dailyConsumption',
-          key: 'day2',
-          render: (DailyConsumption: number[]) => DailyConsumption?.[1] || '0',
-          width: 80,
-          align: 'right',
-        },
-        {
-          title: 'Day 3',
-          dataIndex: 'dailyConsumption',
-          key: 'day3',
-          render: (DailyConsumption: number[]) => DailyConsumption?.[2] || '0',
-          width: 80,
-          align: 'right',
-        },
-        {
-          title: 'Day 4',
-          dataIndex: 'dailyConsumption',
-          key: 'day4',
-          render: (DailyConsumption: number[]) => DailyConsumption?.[3] || '0',
-          width: 80,
-          align: 'right',
-        },
-        {
-          title: 'Day 5',
-          dataIndex: 'dailyConsumption',
-          key: 'day5',
-          render: (DailyConsumption: number[]) => DailyConsumption?.[4] || '0',
-          width: 80,
-          align: 'right',
-        },
-      ],
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      fixed: 'right',
+      title: "Actions",
+      key: "actions",
       width: 100,
       render: (_, record) => (
         <Space>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => router.push(`/pharmacy/drug/update/${record._id}`)}
-            size="small"
-          />
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => showDeleteConfirm(record._id!, record.name)}
-            size="small"
-          />
+          <Button icon={<EditOutlined />} onClick={() => router.push(`/pharmacy/drug/update/${record._id}`)} size="small" />
+          <Button danger icon={<DeleteOutlined />} onClick={() => showDeleteConfirm(record._id!, record.name)} size="small" />
         </Space>
       ),
     },
   ];
 
+  const treatmentColumns: ColumnsType<IPopulatedDispensedMedication> = [
+    { title: 'Patient Code', dataIndex: ['patientId', 'code'], key: 'patientCode' },
+    { title: 'Patient Name', dataIndex: ['patientId', 'name'], key: 'patientName' },
+    { title: 'Date Dispensed', dataIndex: 'createdAt', key: 'createdAt', render: (text) => new Date(text).toLocaleDateString('en-GB') },
+    { title: 'Number of Medications', dataIndex: 'medications', key: 'medicationCount', render: (meds) => meds.length },
+    {
+        title: "Actions",
+        key: "actions",
+        render: (_, record) => (
+          <Space size="middle">
+            <Button onClick={() => router.push(`/pharmacy/dispense?patientId=${record.patientId._id}`)} size="small">
+              View/Edit
+            </Button>
+          </Space>
+        ),
+      },
+  ];
+
+  const expandedTreatmentRender = (record: IPopulatedDispensedMedication) => {
+    const columns = [
+      { title: 'Drug Name', dataIndex: ['drug', 'name'], key: 'drugName' },
+      { title: 'Quantity', dataIndex: 'quantity', key: 'quantity' },
+      { title: 'Unit', dataIndex: 'quantityType', key: 'quantityType' },
+      { title: 'Total Pills', dataIndex: 'remaining', key: 'remaining' },
+    ];
+    return <Table columns={columns} dataSource={record.medications} pagination={false} rowKey={(med) => med.drug.barcode} />;
+  };
+
   return (
-    <>
-      {contextHolder}
-      <div className="p-6">
-        <Card>
-          <Row justify="space-between" align="middle" className="mb-6">
-            <Col xs={24} md={12}>
-              <Title level={2} className="!mb-0">Pharmacy</Title>
-            </Col>
-            <Col xs={24} md={12} className="mt-4 md:mt-0">
-              <Space className="w-full justify-end">
+    <div className="p-6">
+      <Card>
+        <Row justify="space-between" align="middle" className="mb-6">
+          <Col xs={24} md={12}>
+            <Title level={2} className="!mb-0">
+              Pharmacy
+            </Title>
+          </Col>
+        </Row>
+
+        <Tabs activeKey={activeTab} onChange={setActiveTab}>
+          <TabPane tab="Drugs" key="drugs">
+            <Row justify="space-between" align="middle" className="mb-4">
+              <Col>
                 <Search
-                  placeholder="Search drugs..."
+                  placeholder="Search drugs by name or barcode..."
                   allowClear
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="w-full max-w-[300px]"
+                  onChange={(e) => setDrugsSearchText(e.target.value)}
+                  style={{ width: 300 }}
                 />
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => router.push('/pharmacy/drug/create')}
-                >
-                  Add Drug
-                </Button>
-              </Space>
-            </Col>
-          </Row>
-
-          <Table
-            columns={columns}
-            dataSource={filteredDrugs}
-            rowKey="_id"
-            scroll={{ x: 1500 }}
-            pagination={{
-              defaultPageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} Drugs`,
-              responsive: true,
-            }}
-            size="middle"
-            bordered
-          />
-
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            className="mt-4"
-            onClick={() => router.push('/pharmacy/dispense')}
-          >
-
-            Add Patient Treatment
-          </Button>
-        </Card>
-      </div>
-    </>
+              </Col>
+              <Col>
+                <Space>
+                    <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={() => router.push("/pharmacy/dispense")}
+                    >
+                        Dispense Treatment
+                    </Button>
+                    <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={() => router.push("/pharmacy/drug/create")}
+                    >
+                        Add Drug
+                    </Button>
+                </Space>
+              </Col>
+            </Row>
+            <Table
+              columns={drugColumns}
+              dataSource={drugs}
+              rowKey="_id"
+              loading={drugsLoading}
+              pagination={drugsPagination}
+              onChange={handleDrugsTableChange}
+              scroll={{ x: 1200 }}
+              size="middle"
+              bordered
+            />
+          </TabPane>
+          <TabPane tab="Patient Treatments" key="treatments">
+            <Row justify="space-between" align="middle" className="mb-4">
+                <Col>
+                    <Search
+                        placeholder="Search by patient name or code..."
+                        allowClear
+                        onChange={(e) => setTreatmentsSearchText(e.target.value)}
+                        style={{ width: 300 }}
+                    />
+                </Col>
+            </Row>
+            <Table
+              columns={treatmentColumns}
+              dataSource={treatments}
+              rowKey="_id"
+              loading={treatmentsLoading}
+              pagination={treatmentsPagination}
+              onChange={handleTreatmentsTableChange}
+              expandable={{ expandedRowRender: expandedTreatmentRender }}
+              size="middle"
+              bordered
+            />
+          </TabPane>
+        </Tabs>
+      </Card>
+    </div>
   );
 }
-

@@ -52,12 +52,11 @@ const AddDrugPage = () => {
       const response = await drugsClient.AddDrug({
         barcode: values.barcode,
         name: values.name,
-        quantity: totalPills,  // Changed from totalStrips to totalPills - API will use this as quantityByPills
+        quantityByPills: totalPills,  // Changed from totalStrips to totalPills - API will use this as quantityByPills
         stripsPerBox: values.stripNumber,
         pillsPerStrip: values.pillsPerStrip,
         sample: sampleChecked,
         expiryDate: values.expiryDate,
-        remains: values.remains || "",
       });
 
       if (!response) {
@@ -162,11 +161,6 @@ const AddDrugPage = () => {
                   style={{ width: "100%" }}
                   onChange={(value) => setPillsPerStrip(value)}
                 />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item label="Remains" name="remains">
-                <Input placeholder="Enter remains (optional)" />
               </Form.Item>
             </Col>
           </Row>

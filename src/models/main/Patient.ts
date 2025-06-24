@@ -301,6 +301,8 @@ const ReferralOfConvoyClinicSchema: Schema<ReferralOfConvoyClinic> = new Schema(
     pharmacy: { type: Boolean, default: false },
     dental: { type: Boolean, default: false },
     goHome: { type: Boolean, default: false },
+    pediatric: { type: Boolean, default: false },
+    radiology: { type: Boolean, default: false },
     other: { type: String },
   },
   { _id: false }

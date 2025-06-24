@@ -9,7 +9,6 @@ const DrugSchema: Schema<IDrug> = new Schema({
   pillsPerStrip: { type: Number, required: true },
   sample: { type: Boolean, required: true ,default: false },
   expiryDate: { type: Date, required: true },
-  remains: { type: String, required: false },
   dailyConsumption: { type: [Number], required: false, default: [0, 0, 0, 0, 0] },
 }, { timestamps: true });
 const Drug: Model<IDrug> = models.Drug || model<IDrug>('Drug', DrugSchema);

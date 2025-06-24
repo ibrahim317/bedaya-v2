@@ -44,21 +44,20 @@ const UpdateDrugPage = () => {
           const fetchedDrug = await drugsClient.findById(id as string);
           if (fetchedDrug) {
             setDrug(fetchedDrug);
-            const strips = fetchedDrug.quantityByPills / fetchedDrug.pillsPerStrip;
-            const remains = fetchedDrug.remains || "";
+            const numberOfCompleteStrips = Math.floor(fetchedDrug.quantityByPills / fetchedDrug.pillsPerStrip);
+            const numberOfCompleteBoxes = Math.floor(numberOfCompleteStrips / fetchedDrug.stripsPerBox);
 
             form.setFieldsValue({
               ...fetchedDrug,
               expiryDate: dayjs(fetchedDrug.expiryDate),
-              strips: Math.floor(strips),
-              remains: remains,
+              strips: numberOfCompleteStrips,
+              boxes: numberOfCompleteBoxes,
               stripNumber: fetchedDrug.stripsPerBox,
             });
 
             // Trigger calculation
             const values = form.getFieldsValue();
-            const boxes = values.boxes || 0;
-            const calculatedTotalStrips = boxes * fetchedDrug.stripsPerBox + (values.strips || 0);
+            const calculatedTotalStrips = numberOfCompleteBoxes * fetchedDrug.stripsPerBox + (values.strips || 0);
             setTotalStrips(calculatedTotalStrips);
             setTotalPills(calculatedTotalStrips * fetchedDrug.pillsPerStrip);
           } else {
@@ -98,7 +97,6 @@ const UpdateDrugPage = () => {
         pillsPerStrip: values.pillsPerStrip,
         sample: values.sample,
         expiryDate: values.expiryDate.toDate(),
-        remains: values.remains || "",
       };
 
       await drugsClient.updateDrug(id as string, dataToUpdate);
@@ -154,7 +152,7 @@ const UpdateDrugPage = () => {
           </Row>
 
           <Row gutter={24}>
-            <Col xs={24} md={8}>
+            <Col xs={24} md={12}>
               <Form.Item
                 label="Strips per Box"
                 name="stripNumber"
@@ -163,7 +161,7 @@ const UpdateDrugPage = () => {
                 <InputNumber min={1} placeholder="Strips per Box" style={{ width: "100%" }} />
               </Form.Item>
             </Col>
-            <Col xs={24} md={8}>
+            <Col xs={24} md={12}>
               <Form.Item
                 label="Pills per Strip"
                 name="pillsPerStrip"
@@ -172,38 +170,36 @@ const UpdateDrugPage = () => {
                 <InputNumber min={1} placeholder="Pills per Strip" style={{ width: "100%" }} />
               </Form.Item>
             </Col>
-            <Col xs={24} md={8}>
-              <Form.Item label="Remains" name="remains">
-                <Input placeholder="Enter remains (optional)" />
-              </Form.Item>
-            </Col>
           </Row>
 
           <Row gutter={24}>
-            <Col xs={24} md={8}>
+            <Col xs={24} md={12}>
               <Form.Item label="Number of Boxes" name="boxes">
                 <InputNumber min={0} placeholder="Enter number of boxes" style={{ width: "100%" }} />
               </Form.Item>
             </Col>
-            <Col xs={24} md={8}>
+            <Col xs={24} md={12}>
               <Form.Item label="Additional Strips" name="strips">
                 <InputNumber min={0} placeholder="Enter additional strips" style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item label="Total Strips">
-                <InputNumber value={totalStrips} readOnly style={{ width: "100%" }} />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={24}>
-            <Col xs={24} md={8}>
-              <Form.Item label="Total Pills">
-                <InputNumber value={totalPills} readOnly style={{ width: "100%" }} />
+            <Col xs={24} md={12}>
+              <Form.Item label="Total Strips">
+                <InputNumber value={totalStrips} readOnly style={{ width: "100%" }} disabled />
               </Form.Item>
             </Col>
-            <Col xs={24} md={8}>
+            <Col xs={24} md={12}>
+              <Form.Item label="Total Pills">
+                <InputNumber value={totalPills} readOnly style={{ width: "100%" }} disabled />
+              </Form.Item>
+            </Col>
+            </Row>
+
+            <Row gutter={24}>
+            <Col xs={24} md={12}>
               <Form.Item
                 label="Expiry Date"
                 name="expiryDate"
@@ -212,7 +208,7 @@ const UpdateDrugPage = () => {
                 <DatePicker style={{ width: "100%" }} />
               </Form.Item>
             </Col>
-            <Col xs={24} md={8}>
+            <Col xs={24} md={12}>
               <Form.Item label="Sample" name="sample" valuePropName="checked">
                 <Checkbox>Is Sample</Checkbox>
               </Form.Item>

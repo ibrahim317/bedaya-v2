@@ -4,8 +4,17 @@ import {
   IPopulatedDispensedMedication,
 } from '@/types/DispensedMedication';
 import { fetchJson } from './base';
+import { PaginatedDispensedMedications } from '@/services/dispensedMedicationService';
 
 export const dispensedMedicationsClient = {
+  async getAll(page: number, limit: number, search: string): Promise<PaginatedDispensedMedications> {
+    const response = await fetch(`/api/dispensed-medications/all?page=${page}&limit=${limit}&search=${search}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch dispensed medications');
+    }
+    return response.json();
+  },
+
   async create(data: DispensedMedicationData): Promise<IDispensedMedication> {
     return await fetchJson<IDispensedMedication>('/api/dispensed-medications', {
       method: 'POST',
