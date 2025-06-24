@@ -101,7 +101,7 @@ export const updateLabTest = async (
   patientId: string,
   data: {
     labTestName: "Urine" | "Blood" | "Stool" | "Albumin-Creat";
-    status: PatientLabTestStatus;
+    status?: PatientLabTestStatus;
     results?: PatientLabTestResult[];
   }
 ) => {

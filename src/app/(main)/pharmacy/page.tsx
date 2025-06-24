@@ -16,7 +16,7 @@ import {
   Card,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { DeleteOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { IDrug } from '@/types/Drug';
 import { drugsClient } from '@/clients/drugsClient';
 import type { FormattedDrug } from '@/clients/drugsClient';
@@ -68,7 +68,7 @@ export default function PharmacyPage() {
     setSearchText(value);
   };
 
-  const showDeleteConfirm = (DrugId: string, drugName: string) => {
+  const showDeleteConfirm = (drugId: string, drugName: string) => {
     confirm({
       title: 'Are you sure you want to delete this drug?',
       icon: <ExclamationCircleOutlined />,
@@ -78,8 +78,8 @@ export default function PharmacyPage() {
       cancelText: 'No',
       onOk: async () => {
         try {
-          await drugsClient.deleteDrug(DrugId);
-          setDrugs((prevDrugs) => prevDrugs.filter((drug) => drug.barcode !== DrugId));
+          await drugsClient.deleteDrug(drugId);
+          setDrugs((prevDrugs) => prevDrugs.filter((drug) => drug._id !== drugId));
           messageApiRef.current?.success('Drug deleted successfully');
         } catch (error) {
           messageApiRef.current?.error('Failed to delete drug');
@@ -104,11 +104,18 @@ export default function PharmacyPage() {
       width: 200,
     },
     {
-      title: 'Quantity',
-      dataIndex: 'quantity',
-      key: 'quantity',
+      title: 'Total Pills',
+      dataIndex: 'quantityByPills',
+      key: 'quantityByPills',
       width: 100,
       align: 'right',
+    },
+    {
+      title: 'Complete Strips',
+      key: 'completeStrips',
+      width: 120,
+      align: 'right',
+      render: (record) => Math.floor(record.quantityByPills / record.pillsPerStrip) || 0,
     },
     {
       title: 'Strips Per Box',
@@ -116,6 +123,20 @@ export default function PharmacyPage() {
       key: 'stripsPerBox',
       width: 100,
       align: 'right',
+    },
+    {
+      title: 'Pills Per Strip',
+      dataIndex: 'pillsPerStrip',
+      key: 'pillsPerStrip',
+      width: 100,
+      align: 'right',
+    },
+    {
+      title: 'Remains',
+      dataIndex: 'remains',
+      key: 'remains',
+      width: 150,
+      ellipsis: true,
     },
     {
       title: 'Expiry Date',
@@ -177,31 +198,24 @@ export default function PharmacyPage() {
       ],
     },
     {
-      title: 'Created At',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      sorter: (a, b) =>
-        a.createdAt
-          ? b.createdAt
-            ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-            : 0
-          : 0,
-      render: (createdAt: string) =>
-        createdAt ? new Date(createdAt).toLocaleString('en-GB') : 'N/A',
-      width: 180,
-    },
-    {
       title: 'Actions',
       key: 'actions',
       fixed: 'right',
-      width: 80,
+      width: 100,
       render: (_, record) => (
-        <Button
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => showDeleteConfirm(record.barcode, record.name)}
-          size="small"
-        />
+        <Space>
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => router.push(`/pharmacy/drug/update/${record._id}`)}
+            size="small"
+          />
+          <Button
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => showDeleteConfirm(record._id!, record.name)}
+            size="small"
+          />
+        </Space>
       ),
     },
   ];
@@ -237,7 +251,7 @@ export default function PharmacyPage() {
           <Table
             columns={columns}
             dataSource={filteredDrugs}
-            rowKey="barcode"
+            rowKey="_id"
             scroll={{ x: 1500 }}
             pagination={{
               defaultPageSize: 10,

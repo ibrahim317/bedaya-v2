@@ -61,14 +61,16 @@ export async function POST(req: NextRequest) {
     const { 
       barcode,          // barcode
       name,
-      quantity,       // number of boxes
+      quantity,       // number of strips
       stripsPerBox,     // strips per box
+      pillsPerStrip,    // pills per strip
       sample = false,
-      expiryDate 
+      expiryDate,
+      remains = ""
     } = body;
 
     // Validate required fields
-    if (!barcode || !name || !quantity || !stripsPerBox || !expiryDate) {
+    if (!barcode || !name || !quantity || !stripsPerBox || !pillsPerStrip || !expiryDate) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -81,6 +83,7 @@ export async function POST(req: NextRequest) {
       typeof name !== 'string' ||
       typeof quantity !== 'number' ||
       typeof stripsPerBox !== 'number' ||
+      typeof pillsPerStrip !== 'number' ||
       typeof sample !== 'boolean' ||
       !expiryDate
     ) {
@@ -90,16 +93,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Calculate total quantity
-    const totalQuantity = (quantity * stripsPerBox);
+    // Calculate total quantity in strips
+    const totalStrips = (quantity * stripsPerBox);
+    
+    // Calculate total pills
+    const totalPills = totalStrips * pillsPerStrip;
 
     const data: DrugData = {
       barcode,
       name,
-      quantity: totalQuantity,
+      quantityByPills: totalPills,
       stripsPerBox,
+      pillsPerStrip,
       sample,
-      expiryDate: new Date(expiryDate)
+      expiryDate: new Date(expiryDate),
+      remains
     };
 
     const drug = await drugService.create(data);

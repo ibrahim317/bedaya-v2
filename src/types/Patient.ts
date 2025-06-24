@@ -30,6 +30,8 @@ export type Screening = {
   parasites?: boolean;
   DM?: boolean;
   diabetes?: boolean;
+  diabetic?: boolean;
+  nonDiabetic?: boolean;
 };
 
 export type MedicalHistory = {

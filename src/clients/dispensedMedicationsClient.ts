@@ -17,4 +17,15 @@ export const dispensedMedicationsClient = {
       `/api/dispensed-medications/patient/${patientId}`
     );
   },
+  async delete(id: string): Promise<void> {
+    return await fetchJson<void>(`/api/dispensed-medications/${id}`, {
+      method: 'DELETE',
+    });
+  },
+  async update(id: string, data: DispensedMedicationData): Promise<IDispensedMedication> {
+    return await fetchJson<IDispensedMedication>(`/api/dispensed-medications/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
 }; 

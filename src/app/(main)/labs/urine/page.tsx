@@ -288,9 +288,12 @@ const UrineLabPage = () => {
     
   const abnormalFindingsOptions = ["Casts", "Eggs", "Mucus", "Bacteria", "Yeast", "Sperms"];
 
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen" id="printableArea">
       <Title level={2} className="text-center mb-6">
         Urine Lab For {patient?.name} ({patient?.code})
       </Title>
@@ -326,9 +329,12 @@ const UrineLabPage = () => {
             </Form.Item>
         </Card>
 
-        <div className="text-center mt-6">
-          <Button type="primary" htmlType="submit" size="large">
+        <div className="text-center mt-6 no-print">
+          <Button type="primary" htmlType="submit" size="large" className="mr-2">
             Submit Urine Lab Results
+          </Button>
+          <Button onClick={handlePrint} size="large">
+            Generate PDF
           </Button>
         </div>
       </Form>

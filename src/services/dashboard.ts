@@ -3,6 +3,7 @@ import User from "@/models/main/User";
 import Clinic from "@/models/main/Clinic";
 import Drug from "@/models/main/Drug";
 import DispensedMedication from "@/models/main/DispensedMedication";
+import PatientDiagnosis from "@/models/main/PatientDiagnosis";
 import { connectDB } from "@/lib/db";
 import { startOfDay, subDays } from "date-fns";
 import { PatientType, PatientLabTestStatus } from "@/types/Patient";
@@ -15,6 +16,57 @@ export async function getDashboardStats() {
   const clinicCount = await Clinic.countDocuments();
   const drugCount = await Drug.countDocuments();
   const dispensedMedicationCount = await DispensedMedication.countDocuments();
+
+  const patientsPerClinic = await PatientDiagnosis.aggregate([
+    {
+      $lookup: {
+        from: 'patients',
+        localField: 'patientId',
+        foreignField: '_id',
+        as: 'patient',
+      },
+    },
+    {
+      $unwind: '$patient',
+    },
+    {
+      $group: {
+        _id: {
+          clinicId: '$clinicId',
+          patientId: '$patientId',
+          type: '$patient.type',
+        },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          clinicId: '$_id.clinicId',
+          type: '$_id.type',
+        },
+        patientCount: { $sum: 1 },
+      },
+    },
+    {
+      $lookup: {
+        from: 'clinics',
+        localField: '_id.clinicId',
+        foreignField: '_id',
+        as: 'clinicInfo',
+      },
+    },
+    {
+      $unwind: '$clinicInfo',
+    },
+    {
+      $project: {
+        _id: 0,
+        clinicName: '$clinicInfo.name',
+        patientCount: 1,
+        type: '$_id.type',
+      },
+    },
+  ]);
 
   // Calculate daily stats for the last 7 days
   const today = startOfDay(new Date());
@@ -99,6 +151,7 @@ export async function getDashboardStats() {
     clinicCount,
     drugCount,
     dispensedMedicationCount,
+    patientsPerClinic,
     dailyPatientCounts,
     adultPatientCount,
     childPatientCount,

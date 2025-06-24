@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button, Select, Table, App, Form, Input, Modal } from 'antd';
+import * as XLSX from 'xlsx';
 import QueryFilter from '@/app/(main)/query-builder/components/QueryFilter';
 import { FilterCondition } from '@/types/Query';
 import {
@@ -32,6 +33,33 @@ const QueryBuilderPage = () => {
   const { message } = App.useApp();
 
   const queryClient = useQueryClient();
+
+  const handleExportExcel = () => {
+    if (tableData.length === 0) {
+      message.warning('No data to export.');
+      return;
+    }
+
+    const dataToExport = tableData.map((row) => {
+      const newRow: { [key: string]: any } = {};
+      Object.keys(row).forEach((key) => {
+        if (key === 'key' && groupBy.length > 0) return;
+        if (typeof row[key] === 'object' && row[key] !== null) {
+          newRow[key] = JSON.stringify(row[key]);
+        } else {
+          newRow[key] = row[key];
+        }
+      });
+      return newRow;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
+
+    const fileName = `query_results_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
 
   const renderComplexCell = (data: any) => {
     if (data === null || data === undefined) {
@@ -335,6 +363,14 @@ const QueryBuilderPage = () => {
               disabled={!selectedCollection}
             >
               Save Report
+            </Button>
+            <Button
+              type='primary'
+              ghost
+              onClick={handleExportExcel}
+              disabled={tableData.length === 0}
+            >
+              Export as Excel
             </Button>
           </div>
         </div>

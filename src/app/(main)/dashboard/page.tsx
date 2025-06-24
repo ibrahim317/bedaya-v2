@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { Typography, Card, Row, Col, Statistic, Spin, Alert, Divider } from 'antd';
-import { Line } from '@ant-design/charts';
+import { Line, Column, ColumnConfig } from '@ant-design/charts';
 import { getDashboardStats } from '@/clients/dashboard';
+import { clinicsClient, IClinicSummary } from '@/clients/clinicsClient';
 import { DashboardStats } from '@/types/Dashboard';
 import { UserOutlined, MedicineBoxOutlined, HomeOutlined, PlusSquareOutlined, SolutionOutlined, ExperimentOutlined } from '@ant-design/icons';
 import { PatientType, PatientLabTestStatus } from '@/types/Patient';
@@ -15,6 +16,7 @@ const labTestStatuses = Object.values(PatientLabTestStatus);
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [clinics, setClinics] = useState<IClinicSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,8 +24,12 @@ export default function DashboardPage() {
     async function fetchData() {
       try {
         setLoading(true);
-        const data = await getDashboardStats();
-        setStats(data);
+        const [statsData, clinicsData] = await Promise.all([
+          getDashboardStats(),
+          clinicsClient.getAllClinics()
+        ]);
+        setStats(statsData);
+        setClinics(clinicsData);
         setError(null);
       } catch (err) {
         setError('Failed to load dashboard data. Please try again later.');
@@ -104,6 +110,52 @@ export default function DashboardPage() {
     }
   } : {};
 
+  const patientsPerClinicData = clinics.flatMap(clinic => {
+    const adultStat = stats?.patientsPerClinic.find(p => p.clinicName === clinic.name && p.type === PatientType.Adult);
+    const childStat = stats?.patientsPerClinic.find(p => p.clinicName === clinic.name && p.type === PatientType.Child);
+    return [
+      { clinicName: clinic.name, patientCount: adultStat ? adultStat.patientCount : 0, type: 'Adults' },
+      { clinicName: clinic.name, patientCount: childStat ? childStat.patientCount : 0, type: 'Children' },
+    ];
+  });
+
+
+  const patientsPerClinicConfig = {
+    data: patientsPerClinicData,
+    xField: 'clinicName',
+    yField: 'patientCount',
+    seriesField: 'type',
+    isGroup: true,
+    // Change the color from a single string to an array of strings
+   color: ({ type }: { type: string }) => {
+    console.log(type);
+      if (type === 'Adults') {
+        return '#5B8FF9'; // Return blue for Adults
+      }
+      return '#5AD8A6'; // Return green for Children
+    },
+    legend: {
+      position: 'top-right' as const,
+    },
+    xAxis: {
+      label: {
+        autoHide: true,
+        autoRotate: true,
+      },
+    },
+    meta: {
+      patientCount: {
+        alias: 'Number of Patients',
+      },
+      clinicName: {
+        alias: 'Clinic',
+      },
+      type: {
+        alias: 'Patient Type',
+      },
+    },
+  };
+
   return (
     <div className="p-4 md:p-8">
       <Title level={2} className="mb-8">
@@ -146,9 +198,17 @@ export default function DashboardPage() {
       {renderLabStats(PatientType.Adult)}
       {renderLabStats(PatientType.Child)}
 
-      <Card title="New Patients (Last 7 Days)">
+      <Card title="New Patients (Last 7 Days)" className="mb-8">
         {stats && <Line {...lineConfig} />}
+      </Card>
+
+      <Card title="Unique Patients per Clinic">
+        {patientsPerClinicData.length > 0 ? (
+          <Column {...patientsPerClinicConfig} />
+        ) : (
+          <Text>No clinic patient data available.</Text>
+        )}
       </Card>
     </div>
   );
-} 
+}

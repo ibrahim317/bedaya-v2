@@ -2,9 +2,10 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
+import * as XLSX from 'xlsx';
 import { getReportById } from '@/clients/reportClient';
 import { getQueryResults } from '@/clients/queryClient';
-import { Spin, Alert, Table, Card, Typography } from 'antd';
+import { Spin, Alert, Table, Card, Typography, Button } from 'antd';
 import { IReport } from '@/models/main/Report';
 
 const { Title, Paragraph } = Typography;
@@ -167,6 +168,38 @@ const ReportDetailPage = () => {
     }
   }
 
+  const handleExportExcel = () => {
+    if (!dataSource || dataSource.length === 0) {
+      return;
+    }
+
+    const dataToExport = dataSource.map((row: any) => {
+      const newRow: { [key: string]: any } = {};
+      columns.forEach((col) => {
+        const key = col.dataIndex as string;
+        // Do not export the artificial key used for grouped results
+        if (rowKey === 'key' && key === 'key') return;
+
+        const value = row[key];
+        if (typeof value === 'object' && value !== null) {
+          newRow[key] = JSON.stringify(value);
+        } else {
+          newRow[key] = value;
+        }
+      });
+      return newRow;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Report Results');
+
+    const fileName = `${
+      report?.name.replace(/\s+/g, '_') || 'report'
+    }_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
+
   return (
     <div className='p-6'>
       <Card>
@@ -174,6 +207,17 @@ const ReportDetailPage = () => {
         <Paragraph>{report.description}</Paragraph>
       </Card>
       <Card className='mt-6'>
+        <div className='flex justify-between items-center mb-4'>
+          <Title level={4} style={{ margin: 0 }}>
+            Report Results
+          </Title>
+          <Button
+            onClick={handleExportExcel}
+            disabled={!dataSource || dataSource.length === 0}
+          >
+            Export as Excel
+          </Button>
+        </div>
         {isLoadingResults && <Spin />}
         {isErrorResults && (
           <Alert

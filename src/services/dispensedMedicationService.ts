@@ -57,3 +57,92 @@ export async function getDispensedMedicationsByPatientId(
     throw new Error('Failed to get dispensed medications');
   }
 }
+
+export async function updateDispensedMedication(
+  id: string,
+  data: DispensedMedicationData
+): Promise<IDispensedMedication> {
+  await connectDB();
+  try {
+    // Find the existing dispensed medication
+    const existingRecord = await DispensedMedication.findById(id);
+    if (!existingRecord) {
+      throw new Error('Dispensed medication record not found');
+    }
+
+    // Revert the previous drug quantities
+    for (const med of existingRecord.medications) {
+      const drug = await Drug.findById(med.drug);
+      if (drug) {
+        drug.quantity += med.quantity;
+        if (drug.dailyConsumption && drug.dailyConsumption[0] >= med.quantity) {
+          drug.dailyConsumption[0] -= med.quantity;
+        }
+        await drug.save();
+      }
+    }
+
+    // Apply the new drug quantities
+    for (const med of data.medications) {
+      const drug = await Drug.findById(med.drug);
+      if (!drug) {
+        throw new Error(`Drug with ID ${med.drug} not found`);
+      }
+      if (drug.quantity < med.quantity) {
+        throw new Error(`Not enough stock for drug ${drug.name}`);
+      }
+      drug.quantity -= med.quantity;
+      if (drug.dailyConsumption) {
+        drug.dailyConsumption[0] += med.quantity;
+      } else {
+        drug.dailyConsumption = [med.quantity];
+      }
+      await drug.save();
+    }
+
+    // Update the record
+    const updatedRecord = await DispensedMedication.findByIdAndUpdate(
+      id,
+      data,
+      { new: true }
+    );
+    
+    return updatedRecord as IDispensedMedication;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to update dispensed medication');
+  }
+}
+
+export async function deleteDispensedMedication(id: string): Promise<void> {
+  await connectDB();
+  try {
+    // Find the existing record
+    const record = await DispensedMedication.findById(id);
+    if (!record) {
+      throw new Error('Dispensed medication record not found');
+    }
+
+    // Revert the drug quantities
+    for (const med of record.medications) {
+      const drug = await Drug.findById(med.drug);
+      if (drug) {
+        drug.quantity += med.quantity;
+        if (drug.dailyConsumption && drug.dailyConsumption[0] >= med.quantity) {
+          drug.dailyConsumption[0] -= med.quantity;
+        }
+        await drug.save();
+      }
+    }
+
+    // Delete the record
+    await DispensedMedication.findByIdAndDelete(id);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to delete dispensed medication');
+  }
+}

@@ -170,8 +170,12 @@ const StoolLabPage = () => {
     { name: "Fecal occult blood", label: "Fecal occult blood", type: "radio", options: ["+VE", "-VE"] },
   ];
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen" id="printableArea">
       <Title level={2} className="text-center mb-6">
         Stool Lab For {patient?.name} ({patient?.code})
       </Title>
@@ -196,9 +200,12 @@ const StoolLabPage = () => {
             </Form.Item>
           </Card>
 
-          <div className="text-center mt-6">
-            <Button type="primary" htmlType="submit" size="large">
+          <div className="text-center mt-6 no-print">
+            <Button type="primary" htmlType="submit" size="large" className="mr-2">
               Save & Done
+            </Button>
+            <Button onClick={handlePrint} size="large">
+              Generate PDF
             </Button>
           </div>
         </Form>

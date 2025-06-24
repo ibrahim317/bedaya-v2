@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Card, Spin, message } from "antd";
+import { Card, Spin, message, Button } from "antd";
 import ChildPatientForm from "../../create-child/components/ChildPatientForm";
 import { fetchPatientById, updatePatient } from "@/clients/patientClient";
 import { IPatient } from "@/types/Patient";
@@ -44,6 +44,10 @@ const UpdateChildPatientPage = () => {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (loading || !initialValues) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -53,10 +57,15 @@ const UpdateChildPatientPage = () => {
   }
 
   return (
-    <div className="md:p-6">
+    <div className="md:p-6" id="printableArea">
       <Card
         title="Update Child Patient"
         className="max-w-7xl mx-auto"
+        extra={
+          <Button onClick={handlePrint} className="no-print">
+            Generate PDF
+          </Button>
+        }
       >
         <ChildPatientForm
           initialValues={initialValues}

@@ -4,6 +4,11 @@ export interface DashboardStats {
   clinicCount: number;
   drugCount: number;
   dispensedMedicationCount: number;
+  patientsPerClinic: {
+    clinicName: string;
+    patientCount: number;
+    type: string;
+  }[];
   dailyPatientCounts: {
     date: string;
     count: number;

@@ -27,17 +27,22 @@ const AddDrugPage = () => {
   const [loading, setLoading] = useState(false);
   const [stripsPerBox, setStripsPerBox] = useState<number | null>(null);
   const [totalStrips, setTotalStrips] = useState<number>(0);
+  const [pillsPerStrip, setPillsPerStrip] = useState<number | null>(null);
+  const [totalPills, setTotalPills] = useState<number>(0);
   const [messageApi, contextHolder] = message.useMessage();
 
-  // Calculate total strips whenever relevant fields change
+  // Calculate total strips and pills whenever relevant fields change
   useEffect(() => {
     const values = form.getFieldsValue();
     const boxes = values.boxes || 0;
     const strips = values.strips || 0;
     const stripsInBox = stripsPerBox || 0;
+    const pills = pillsPerStrip || 0;
 
-    setTotalStrips(boxes * stripsInBox + strips);
-  }, [form, stripsPerBox]);
+    const calculatedTotalStrips = boxes * stripsInBox + strips;
+    setTotalStrips(calculatedTotalStrips);
+    setTotalPills(calculatedTotalStrips * pills);
+  }, [form, stripsPerBox, pillsPerStrip]);
 
   const handleSubmit = async (values: any, addAnother: boolean) => {
     try {
@@ -47,10 +52,12 @@ const AddDrugPage = () => {
       const response = await drugsClient.AddDrug({
         barcode: values.barcode,
         name: values.name,
-        quantity: totalStrips,
+        quantity: totalPills,  // Changed from totalStrips to totalPills - API will use this as quantityByPills
         stripsPerBox: values.stripNumber,
+        pillsPerStrip: values.pillsPerStrip,
         sample: sampleChecked,
         expiryDate: values.expiryDate,
+        remains: values.remains || "",
       });
 
       if (!response) {
@@ -62,10 +69,12 @@ const AddDrugPage = () => {
       messageApi.success("Drug created successfully");
 
       if (addAnother) {
-        // Reset form but keep stripNumber value for convenience
+        // Reset form but keep stripNumber and pillsPerStrip values for convenience
         const stripNumber = form.getFieldValue("stripNumber");
+        const pillsPerStripValue = form.getFieldValue("pillsPerStrip");
         form.resetFields();
         form.setFieldValue("stripNumber", stripNumber);
+        form.setFieldValue("pillsPerStrip", pillsPerStripValue);
         setSampleChecked(false);
       } else {
         router.push("/pharmacy");
@@ -92,7 +101,11 @@ const AddDrugPage = () => {
             const boxes = allValues.boxes || 0;
             const strips = allValues.strips || 0;
             const stripsInBox = allValues.stripNumber || 0;
-            setTotalStrips(boxes * stripsInBox + strips);
+            const pills = allValues.pillsPerStrip || 0;
+            
+            const calculatedTotalStrips = boxes * stripsInBox + strips;
+            setTotalStrips(calculatedTotalStrips);
+            setTotalPills(calculatedTotalStrips * pills);
           }}
         >
           <Row gutter={24}>
@@ -136,6 +149,30 @@ const AddDrugPage = () => {
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
+              <Form.Item
+                label="Pills per Strip"
+                name="pillsPerStrip"
+                rules={[
+                  { required: true, message: "Please enter Pills per Strip" },
+                ]}
+              >
+                <InputNumber
+                  min={1}
+                  placeholder="Pills per Strip"
+                  style={{ width: "100%" }}
+                  onChange={(value) => setPillsPerStrip(value)}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item label="Remains" name="remains">
+                <Input placeholder="Enter remains (optional)" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={24}>
+            <Col xs={24} md={8}>
               <Form.Item label="Number of Boxes" name="boxes">
                 <InputNumber
                   min={0}
@@ -154,9 +191,6 @@ const AddDrugPage = () => {
                 />
               </Form.Item>
             </Col>
-          </Row>
-
-          <Row gutter={24}>
             <Col xs={24} md={8}>
               <Form.Item label="Total Strips">
                 <InputNumber
@@ -166,7 +200,18 @@ const AddDrugPage = () => {
                 />
               </Form.Item>
             </Col>
+          </Row>
 
+          <Row gutter={24}>
+            <Col xs={24} md={8}>
+              <Form.Item label="Total Pills">
+                <InputNumber
+                  value={totalPills}
+                  disabled
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+            </Col>
             <Col xs={24} md={8}>
               <Form.Item
                 label="Expiry Date"

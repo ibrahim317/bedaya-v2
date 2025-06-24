@@ -1,5 +1,5 @@
 import { Document, ObjectId } from 'mongoose';
-import { IDrug } from './Drug';
+import { IDrugWithId } from './Drug';
 
 export interface IDispensedMedication extends Document {
   patientId: ObjectId;
@@ -13,7 +13,7 @@ export interface IDispensedMedication extends Document {
 
 export interface IPopulatedDispensedMedication extends Omit<IDispensedMedication, 'medications'> {
   medications: {
-    drug: IDrug;
+    drug: IDrugWithId;
     quantity: number;
   }[];
 }

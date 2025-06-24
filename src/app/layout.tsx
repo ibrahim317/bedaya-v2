@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from 'next/font/google';
 import "./globals.css";
+import "./printable.css";
 import AuthProvider from "@/providers/AuthProvider";
 import AntdRegistry from "@/providers/AntdRegistry";
 import ThemeProvider from "@/providers/ThemeProvider";
