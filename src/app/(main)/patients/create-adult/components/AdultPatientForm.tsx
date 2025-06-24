@@ -1,4 +1,4 @@
-import { Card, Form, Button } from "antd";
+import { Card, Form, Button, Tabs } from "antd";
 import { PatientType } from "@/types/Patient";
 import BasicInformationTop from "../../components/BasicInformationTop";
 import PatientDetails from "./PatientDetails";
@@ -8,6 +8,9 @@ import ComplaintSection from "../../components/ComplaintSection";
 import PastHistorySection from "./PastHistorySection";
 import ExaminationAndScreeningSection from "./ExaminationAndScreeningSection";
 import ReferralSection from "./ReferralSection";
+import ImageUploader from "../../components/ImageUploader";
+
+const { TabPane } = Tabs;
 
 interface AdultPatientFormProps {
   initialValues: any;
@@ -16,6 +19,7 @@ interface AdultPatientFormProps {
   submitLabel?: string;
   form?: any;
   loading?: boolean;
+  patient?: any;
 }
 
 const AdultPatientForm = ({
@@ -25,9 +29,18 @@ const AdultPatientForm = ({
   submitLabel = "Create Patient",
   form,
   loading = false,
+  patient,
 }: AdultPatientFormProps) => {
   const [internalForm] = Form.useForm();
   const usedForm = form || internalForm;
+
+  const handleFollowUpUpload = (urls: string[]) => {
+    usedForm.setFieldsValue({ followUpImages: urls });
+  };
+
+  const handleScreeningUpload = (urls: string[]) => {
+    usedForm.setFieldsValue({ screeningImages: urls });
+  };
 
   return (
     <Form
@@ -36,23 +49,45 @@ const AdultPatientForm = ({
       layout="vertical"
       initialValues={initialValues}
     >
-      <BasicInformationTop form={usedForm} />
-      <PatientDetails />
-      <HabitsSection />
-      <Form.Item
-        noStyle
-        shouldUpdate={(prevValues, currentValues) =>
-          prevValues.sex !== currentValues.sex
-        }
-      >
-        {({ getFieldValue }) =>
-          getFieldValue("sex") === "F" ? <FemaleSpecificSection /> : null
-        }
-      </Form.Item>
-      <ComplaintSection />
-      <PastHistorySection />
-      <ExaminationAndScreeningSection />
-      <ReferralSection />
+      <Tabs defaultActiveKey="1">
+        <TabPane tab="Patient Data" key="1">
+          <BasicInformationTop form={usedForm} />
+          <PatientDetails />
+          <HabitsSection />
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) =>
+              prevValues.sex !== currentValues.sex
+            }
+          >
+            {({ getFieldValue }) =>
+              getFieldValue("sex") === "F" ? <FemaleSpecificSection /> : null
+            }
+          </Form.Item>
+          <ComplaintSection />
+          <PastHistorySection />
+          <ExaminationAndScreeningSection />
+          <ReferralSection />
+        </TabPane>
+        <TabPane tab="Follow up" key="2">
+          <Form.Item name="followUpImages">
+            <ImageUploader
+              onUpload={handleFollowUpUpload}
+              fieldName="followUpImages"
+              initialImageUrls={patient?.followUpImages}
+            />
+          </Form.Item>
+        </TabPane>
+        <TabPane tab="Screening" key="3">
+          <Form.Item name="screeningImages">
+            <ImageUploader
+              onUpload={handleScreeningUpload}
+              fieldName="screeningImages"
+              initialImageUrls={patient?.screeningImages}
+            />
+          </Form.Item>
+        </TabPane>
+      </Tabs>
       <Form.Item className="mt-6">
         <Button
           type="primary"

@@ -1,8 +1,10 @@
 import { fetchJson } from './base';
+import { IClinicVisit } from '@/types/ClinicVisit';
 
 export interface IClinic {
   _id: string;
   name: string;
+  enableImages?: boolean;
   commonDiagnoses: Array<{
     _id: string;
     name: string;
@@ -48,10 +50,13 @@ export const clinicsClient = {
   /**
    * Update a clinic
    */
-  async updateClinic(id: string, name: string): Promise<IClinic> {
+  async updateClinic(
+    id: string,
+    data: Partial<Omit<IClinic, '_id'>>
+  ): Promise<IClinic> {
     return await fetchJson<IClinic>(`/api/clinics/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify(data),
     });
   },
 
@@ -113,7 +118,7 @@ export const clinicsClient = {
     });
   },
 
-  async createPatientRecords(clinicId: string, payload: { patientId: string; diagnoses: string[]; treatments: string[] }) {
+  async createClinicVisit(clinicId: string, payload: { patientId: string; diagnoses: string[]; treatments: string[]; images?: string[] }) {
     const response = await fetch(`/api/clinics/${clinicId}/records`, {
         method: 'POST',
         headers: {
@@ -124,7 +129,7 @@ export const clinicsClient = {
 
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create patient records');
+        throw new Error(error.error || 'Failed to create clinic visit');
     }
 
     return response.json();
@@ -132,5 +137,9 @@ export const clinicsClient = {
 
   async getPatientTreatments(clinicId: string, patientId: string) {
     return await fetchJson(`/api/clinics/${clinicId}/patients/${patientId}/treatments`);
+  },
+
+  async getPatientVisitHistory(clinicId: string, patientId: string): Promise<IClinicVisit[]> {
+    return await fetchJson(`/api/clinics/${clinicId}/patients/${patientId}/visits`);
   }
 }; 

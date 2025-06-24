@@ -1,9 +1,11 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, Select, Form, Spin, Button, message, Table } from 'antd';
+import { Card, Select, Form, Spin, Button, message, Table, Image } from 'antd';
 import { clinicsClient, IClinic } from '@/clients/clinicsClient';
 import { searchPatients } from '@/clients/patientClient';
 import { IPatient } from '@/types/Patient';
+import ImageUploader from '@/app/(main)/patients/components/ImageUploader';
+import { IClinicVisit } from '@/types/ClinicVisit';
 
 interface ClinicPageProps {
   params: {
@@ -17,11 +19,12 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [selectedDiagnoses, setSelectedDiagnoses] = useState<string[]>([]);
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [searchedPatients, setSearchedPatients] = useState<IPatient[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [patientTreatments, setPatientTreatments] = useState<any[]>([]);
-  const [loadingTreatments, setLoadingTreatments] = useState(false);
+  const [visitHistory, setVisitHistory] = useState<IClinicVisit[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const clinicId = params['clinic-id'];
 
@@ -42,22 +45,22 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
   }, [fetchClinic]);
 
   useEffect(() => {
-    const fetchTreatments = async () => {
+    const fetchVisitHistory = async () => {
       if (selectedPatient) {
-        setLoadingTreatments(true);
+        setLoadingHistory(true);
         try {
-          const treatments = await clinicsClient.getPatientTreatments(clinicId, selectedPatient);
-          setPatientTreatments(treatments as any[]);
+          const history = await clinicsClient.getPatientVisitHistory(clinicId, selectedPatient);
+          setVisitHistory(history);
         } catch (error) {
-          message.error("Failed to fetch patient's treatments.");
+          message.error("Failed to fetch patient's visit history.");
         } finally {
-          setLoadingTreatments(false);
+          setLoadingHistory(false);
         }
       } else {
-        setPatientTreatments([]);
+        setVisitHistory([]);
       }
     };
-    fetchTreatments();
+    fetchVisitHistory();
   }, [selectedPatient, clinicId]);
 
   const handlePatientSearch = async (query: string) => {
@@ -97,17 +100,20 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
             await clinicsClient.addBulkTreatments(clinicId, newTreatmentNames);
         }
 
-        await clinicsClient.createPatientRecords(clinicId, {
+        await clinicsClient.createClinicVisit(clinicId, {
             patientId: selectedPatient,
             diagnoses: selectedDiagnoses,
             treatments: selectedTreatments,
+            images: imageUrls,
         });
-        message.success("Records saved successfully!");
+        message.success("Visit saved successfully!");
         setSelectedPatient(null);
         setSelectedDiagnoses([]);
         setSelectedTreatments([]);
+        setImageUrls([]);
         setSearchedPatients([]);
-        setPatientTreatments([]);
+        const history = await clinicsClient.getPatientVisitHistory(clinicId, selectedPatient);
+        setVisitHistory(history);
         fetchClinic();
     } catch (error: any) {
         message.error(error.message || "Failed to save records.");
@@ -157,6 +163,15 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
             ))}
           </Select>
         </Form.Item>
+        {clinic?.enableImages && (
+          <Form.Item label="Images">
+            <ImageUploader
+              onUpload={setImageUrls}
+              fieldName="clinicRecordImages"
+              initialImageUrls={[]}
+            />
+          </Form.Item>
+        )}
         <Form.Item label="Treatment">
           <Select
             mode="tags"
@@ -179,24 +194,48 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
         </Form.Item>
       </Form>
       {selectedPatient && (
-        <Card title="Patient Treatment History">
+        <Card title="Patient Visit History" className="mt-6">
           <Table
-            dataSource={patientTreatments}
-            loading={loadingTreatments}
-            rowKey={(record) => record._id}
+            dataSource={visitHistory}
+            loading={loadingHistory}
+            rowKey="_id"
             columns={[
-              {
-                title: 'Treatment',
-                dataIndex: 'treatmentName',
-                key: 'treatmentName',
-              },
               {
                 title: 'Date',
                 dataIndex: 'createdAt',
                 key: 'createdAt',
                 render: (text) => new Date(text).toLocaleDateString(),
               },
+              {
+                title: 'Diagnoses',
+                dataIndex: 'diagnoses',
+                key: 'diagnoses',
+                render: (diagnoses: string[]) => diagnoses.join(', '),
+              },
+              {
+                title: 'Treatments',
+                dataIndex: 'treatments',
+                key: 'treatments',
+                render: (treatments: string[]) => treatments.join(', '),
+              },
             ]}
+            expandable={{
+              expandedRowRender: (record) => (
+                <div>
+                  <p style={{ margin: 0 }}>Images:</p>
+                  {record.images && record.images.length > 0 ? (
+                     <Image.PreviewGroup>
+                        {record.images.map((url, index) => (
+                            <Image key={index} width={100} src={url} />
+                        ))}
+                    </Image.PreviewGroup>
+                  ) : (
+                    'No images for this visit.'
+                  )}
+                </div>
+              ),
+              rowExpandable: (record) => record.images && record.images.length > 0,
+            }}
             pagination={false}
           />
         </Card>

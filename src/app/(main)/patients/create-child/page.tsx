@@ -13,6 +13,8 @@ const initialValues = {
   sex: "",
   code: "",
   checkupDay: 1,
+  followUpImages: [],
+  screeningImages: [],
 };
 const CreatePatientPage = () => {
   const [form] = Form.useForm();

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Card, Input, Tabs, Table, message, Popconfirm } from 'antd';
+import { Button, Card, Input, Tabs, Table, message, Popconfirm, Form, Switch, Spin } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { ArrowLeftOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { IClinic, clinicsClient } from '@/clients/clinicsClient';
@@ -84,6 +84,20 @@ export default function ClinicDetailsPage({ params }: PageProps) {
       fetchClinic();
     } catch (error) {
       message.error(`Failed to delete selected ${type}s`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateClinicSettings = async (values: { enableImages: boolean }) => {
+    if (!clinic) return;
+    try {
+      setLoading(true);
+      await clinicsClient.updateClinic(clinic._id, { enableImages: values.enableImages });
+      message.success('Settings updated successfully');
+      fetchClinic();
+    } catch (error) {
+      message.error('Failed to update settings');
     } finally {
       setLoading(false);
     }
@@ -262,7 +276,44 @@ export default function ClinicDetailsPage({ params }: PageProps) {
         </div>
       ),
     },
+    {
+      key: 'settings',
+      label: 'Settings',
+      children: (
+        <div className="p-4">
+          {clinic && (
+            <Form
+              layout="vertical"
+              initialValues={{ enableImages: clinic.enableImages }}
+              onFinish={handleUpdateClinicSettings}
+              key={clinic?._id} 
+            >
+              <Form.Item
+                name="enableImages"
+                label="Enable Images for Clinic Records"
+                valuePropName="checked"
+              >
+                <Switch />
+              </Form.Item>
+              <Form.Item>
+                <Button type="primary" htmlType="submit" loading={loading}>
+                  Save Settings
+                </Button>
+              </Form.Item>
+            </Form>
+          )}
+        </div>
+      ),
+    },
   ];
+
+  if (!clinic) {
+    return (
+      <div className="p-6 text-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">

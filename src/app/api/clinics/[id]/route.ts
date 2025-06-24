@@ -37,11 +37,23 @@ export async function GET(request: Request, { params }: RouteParams) {
 export async function PUT(request: Request, { params }: RouteParams) {
   try {
     const { id } = params;
-    const { name } = await request.json();
+    const body = await request.json();
 
-    if (!name?.trim()) {
+    const { name, enableImages } = body;
+
+    const updateData: { name?: string; enableImages?: boolean } = {};
+
+    if (name && name.trim()) {
+      updateData.name = name.trim();
+    }
+    
+    if (typeof enableImages === 'boolean') {
+        updateData.enableImages = enableImages;
+    }
+
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
-        { error: 'Clinic name is required' },
+        { error: 'No valid fields to update' },
         { status: 400 }
       );
     }
@@ -49,7 +61,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     await connectDB();
     const clinic = await Clinic.findByIdAndUpdate(
       id,
-      { name: name.trim() },
+      { $set: updateData },
       { new: true }
     );
 

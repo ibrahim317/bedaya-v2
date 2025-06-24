@@ -10,9 +10,13 @@ export async function GET(
     await connectDB();
     const { id: clinicId, patientId } = params;
 
-    const treatments = await clinicService.getPatientTreatmentsForClinic(clinicId, patientId);
+    if (!clinicId || !patientId) {
+        return NextResponse.json({ error: 'Clinic ID and Patient ID are required' }, { status: 400 });
+    }
 
-    return NextResponse.json(treatments, { status: 200 });
+    const visits = await clinicService.getPatientVisitHistory(clinicId, patientId);
+
+    return NextResponse.json(visits, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },

@@ -72,6 +72,7 @@ const UpdateAdultPatientPage = () => {
           onFinish={onFinish}
           submitLabel="Update Patient"
           loading={formLoading}
+          patient={initialValues}
         />
       </Card>
     </div>

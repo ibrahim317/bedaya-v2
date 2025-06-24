@@ -472,6 +472,8 @@ const PatientSchema: Schema<IPatient> = new Schema(
     attachments: { type: [AttachmentSchema], default: [] },
     drugs: { type: [PatientDrugSchema], default: [] },
     labTest: { type: [PatientLabTestSchema], default: [] },
+    followUpImages: [{ type: String }],
+    screeningImages: [{ type: String }],
   },
   { timestamps: true }
 );

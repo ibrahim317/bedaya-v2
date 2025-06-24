@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { clinicService } from '@/services/clinicService';
-import PatientDiagnosis from '@/models/main/PatientDiagnosis';
-import PatientTreatment from '@/models/main/PatientTreatment';
+import ClinicVisit from '@/models/main/ClinicVisit';
 
 export async function POST(
   request: Request,
@@ -11,7 +10,7 @@ export async function POST(
   try {
     await connectDB();
     const clinicId = params.id;
-    const { patientId, diagnoses, treatments } = await request.json();
+    const { patientId, diagnoses, treatments, images } = await request.json();
 
     if (!patientId || !clinicId) {
       return NextResponse.json(
@@ -20,18 +19,18 @@ export async function POST(
       );
     }
     
-    // Ensure models are initialized
-    await PatientDiagnosis.find({_id: null});
-    await PatientTreatment.find({_id: null});
+    // Ensure model is initialized
+    await ClinicVisit.find({_id: null});
 
-    await clinicService.createPatientRecords({
+    await clinicService.createClinicVisit({
         patientId,
         clinicId,
         diagnoses,
         treatments,
+        images,
     });
 
-    return NextResponse.json({ message: "Records created successfully" }, { status: 201 });
+    return NextResponse.json({ message: "Visit recorded successfully" }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message },

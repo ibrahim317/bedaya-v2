@@ -5,4 +5,5 @@ export interface IClinic extends Document {
   name: string;
   commonDiagnoses: ICommonDiagnosis[];
   commonTreatments: ICommonTreatment[];
+  enableImages?: boolean;
 } 
