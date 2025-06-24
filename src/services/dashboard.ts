@@ -3,10 +3,10 @@ import User from "@/models/main/User";
 import Clinic from "@/models/main/Clinic";
 import Drug from "@/models/main/Drug";
 import DispensedMedication from "@/models/main/DispensedMedication";
-import PatientDiagnosis from "@/models/main/PatientDiagnosis";
 import { connectDB } from "@/lib/db";
 import { startOfDay, subDays } from "date-fns";
 import { PatientType, PatientLabTestStatus } from "@/types/Patient";
+import ClinicVisit from "@/models/main/ClinicVisit";
 
 export async function getDashboardStats() {
   await connectDB();
@@ -17,7 +17,7 @@ export async function getDashboardStats() {
   const drugCount = await Drug.countDocuments();
   const dispensedMedicationCount = await DispensedMedication.countDocuments();
 
-  const patientsPerClinic = await PatientDiagnosis.aggregate([
+  const patientsPerClinic = await ClinicVisit.aggregate([
     {
       $lookup: {
         from: 'patients',

@@ -18,7 +18,7 @@ export default function AddEditClinicModal({ open, clinic, onClose }: AddEditCli
     try {
       setLoading(true);
       if (isEditing && clinic) {
-        await clinicsClient.updateClinic(clinic._id, values.name);
+        await clinicsClient.updateClinic(clinic._id, {name: values.name});
       } else {
         await clinicsClient.createClinic(values.name);
       }
