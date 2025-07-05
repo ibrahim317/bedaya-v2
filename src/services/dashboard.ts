@@ -145,6 +145,28 @@ export async function getDashboardStats() {
     return acc;
   }, {});
 
+  const labPatients = await Patient.find({ labTest: { $exists: true, $ne: [] } });
+  let labTotalIn = 0;
+  let labTotalOut = 0;
+
+  for (const patient of labPatients) {
+    if (patient.labTest && patient.labTest.length > 0) {
+      const isOut = patient.labTest.every(
+        (lt) => lt.status === PatientLabTestStatus.CheckedOut
+      );
+      if (isOut) {
+        labTotalOut++;
+      } else {
+        const isIn = patient.labTest.some(
+          (lt) => lt.status === PatientLabTestStatus.CheckedIn
+        );
+        if (isIn) {
+          labTotalIn++;
+        }
+      }
+    }
+  }
+
   return {
     patientCount,
     userCount,
@@ -155,6 +177,8 @@ export async function getDashboardStats() {
     dailyPatientCounts,
     adultPatientCount,
     childPatientCount,
-    labTestStats
+    labTestStats,
+    labTotalIn,
+    labTotalOut,
   };
 } 

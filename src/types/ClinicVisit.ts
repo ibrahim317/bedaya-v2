@@ -6,7 +6,8 @@ export interface IClinicVisit {
   clinicId: Schema.Types.ObjectId;
   diagnoses: string[];
   treatments: string[];
-  images: string[];
+  followUpImages: string[];
+  radiologyImages: string[];
   createdAt?: string;
   updatedAt?: string;
 } 

@@ -40,12 +40,19 @@ const QueryBuilderPage = () => {
       return;
     }
 
-    const dataToExport = tableData.map((row) => {
+    const expandedData = tableData.map((row) => {
       const newRow: { [key: string]: any } = {};
       Object.keys(row).forEach((key) => {
-        if (key === 'key' && groupBy.length > 0) return;
-        if (typeof row[key] === 'object' && row[key] !== null) {
-          newRow[key] = JSON.stringify(row[key]);
+        if (Array.isArray(row[key])) {
+          row[key].forEach((item: any, index: number) => {
+            if (typeof item === 'object' && item !== null) {
+              Object.keys(item).forEach((prop) => {
+                newRow[`${key}_${index + 1}_${prop}`] = item[prop];
+              });
+            } else {
+              newRow[`${key}_${index + 1}`] = item;
+            }
+          });
         } else {
           newRow[key] = row[key];
         }
@@ -53,7 +60,7 @@ const QueryBuilderPage = () => {
       return newRow;
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const worksheet = XLSX.utils.json_to_sheet(expandedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
 

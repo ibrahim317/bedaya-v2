@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
-import { Table, Button, Card, App, Tag, Input, Select } from "antd";
+import { Table, Button, Card, App, Tag, Input, Select, Row, Col, Statistic } from "antd";
 import { useRouter } from "next/navigation";
 import { fetchPatients, updateLabTest } from "@/clients/patientClient";
+import { getDashboardStats } from "@/clients/dashboard";
 import {
   PatientType,
   IPatient,
@@ -33,6 +34,8 @@ const LabsPage = () => {
     child: { current: 1, pageSize: 10, total: 0 },
   });
 
+  const [stats, setStats] = useState<{ labTotalIn: number; labTotalOut: number } | null>(null);
+
   const [tableParams, setTableParams] = useState<{
     adult: TableParams;
     child: TableParams;
@@ -48,6 +51,21 @@ const LabsPage = () => {
       search: "",
     },
   });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const dashboardStats = await getDashboardStats();
+        setStats({
+          labTotalIn: dashboardStats.labTotalIn,
+          labTotalOut: dashboardStats.labTotalOut,
+        });
+      } catch (error) {
+        message.error("Failed to fetch lab stats");
+      }
+    };
+    fetchStats();
+  }, [message]);
 
   const fetchTableData = useCallback(
     async (type: "adult" | "child") => {
@@ -82,6 +100,14 @@ const LabsPage = () => {
     },
     [tableParams, message]
   );
+
+  useEffect(() => {
+    fetchTableData("adult");
+  }, [tableParams.adult, fetchTableData]);
+
+  useEffect(() => {
+    fetchTableData("child");
+  }, [tableParams.child, fetchTableData]);
 
   const handleStatusChange = async (
     patientId: string,
@@ -188,6 +214,35 @@ const LabsPage = () => {
     },
   });
 
+  const getOverallStatus = (patient: IPatient) => {
+    if (!patient.labTest || patient.labTest.length === 0) {
+      return { text: 'No Tests', color: 'default' };
+    }
+  
+    const allOut = patient.labTest.every(
+      (lt) => lt.status === PatientLabTestStatus.CheckedOut
+    );
+    if (allOut) {
+      return { text: 'Out', color: 'green' };
+    }
+  
+    const anyIn = patient.labTest.some(
+      (lt) => lt.status === PatientLabTestStatus.CheckedIn
+    );
+    if (anyIn) {
+      return { text: 'In', color: 'blue' };
+    }
+    
+    const anyNotRequested = patient.labTest.some(
+      (lt) => lt.status === PatientLabTestStatus.NotRequested
+    );
+    if (anyNotRequested) {
+      return { text: 'Pending', color: 'gold' };
+    }
+  
+    return { text: 'N/A', color: 'default' };
+  };
+
   const getColumns = (type: "adult" | "child") => [
     {
       title: "Code",
@@ -200,6 +255,15 @@ const LabsPage = () => {
       dataIndex: "name",
       key: "name",
       width: "10%",
+    },
+    {
+      title: 'Overall Status',
+      key: 'overallStatus',
+      width: '10%',
+      render: (record: IPatient) => {
+        const status = getOverallStatus(record);
+        return <Tag color={status.color}>{status.text}</Tag>;
+      },
     },
     {
       title: "Status",
@@ -256,24 +320,19 @@ const LabsPage = () => {
     },
   ];
 
-  useEffect(() => {
-    fetchTableData("adult");
-  }, [
-    tableParams.adult.page,
-    tableParams.adult.pageSize,
-    tableParams.adult.search,
-  ]);
-
-  useEffect(() => {
-    fetchTableData("child");
-  }, [
-    tableParams.child.page,
-    tableParams.child.pageSize,
-    tableParams.child.search,
-  ]);
-
   return (
     <div className="p-6 space-y-6">
+      <Card>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Statistic title="Total Patients In" value={stats?.labTotalIn ?? 'Loading...'} />
+          </Col>
+          <Col span={12}>
+            <Statistic title="Total Patients Out" value={stats?.labTotalOut ?? 'Loading...'} />
+          </Col>
+        </Row>
+      </Card>
+
       <Card
         title="Adult Patients Lab Tests"
         className="overflow-x-auto"
@@ -281,19 +340,19 @@ const LabsPage = () => {
           <Search
             placeholder="Search by name or code..."
             allowClear
-            onSearch={(value) => handleSearch("adult", value)}
+            onSearch={(value) => handleSearch('adult', value)}
             className="block self-end"
             style={{ width: 250 }}
           />
         }
       >
         <Table
-          columns={getColumns("adult")}
+          columns={getColumns('adult')}
           rowKey="_id"
           dataSource={data.adult}
           pagination={pagination.adult}
           loading={loading.adult}
-          onChange={(pagination) => handleTableChange("adult", pagination)}
+          onChange={(pagination) => handleTableChange('adult', pagination)}
           bordered
         />
       </Card>
@@ -305,18 +364,18 @@ const LabsPage = () => {
           <Search
             placeholder="Search by name or code..."
             allowClear
-            onSearch={(value) => handleSearch("child", value)}
+            onSearch={(value) => handleSearch('child', value)}
             style={{ width: 250 }}
           />
         }
       >
         <Table
-          columns={getColumns("child")}
+          columns={getColumns('child')}
           rowKey="_id"
           dataSource={data.child}
           pagination={pagination.child}
           loading={loading.child}
-          onChange={(pagination) => handleTableChange("child", pagination)}
+          onChange={(pagination) => handleTableChange('child', pagination)}
           bordered
         />
       </Card>

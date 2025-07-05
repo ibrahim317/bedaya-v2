@@ -95,16 +95,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Calculate total quantity in strips
-    const totalStrips = (quantityByPills * stripsPerBox);
-    
-    // Calculate total pills
-    const totalPills = totalStrips * pillsPerStrip;
-
     const data: DrugData = {
       barcode,
       name,
-      quantityByPills: totalPills,
+      quantityByPills,
       stripsPerBox,
       pillsPerStrip,
       sample,

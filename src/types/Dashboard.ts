@@ -25,4 +25,6 @@ export interface DashboardStats {
       };
     };
   };
+  labTotalIn: number;
+  labTotalOut: number;
 } 

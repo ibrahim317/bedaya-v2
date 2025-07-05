@@ -10,7 +10,7 @@ export async function POST(
   try {
     await connectDB();
     const clinicId = params.id;
-    const { patientId, diagnoses, treatments, images } = await request.json();
+    const { patientId, diagnoses, treatments, followUpImages, radiologyImages } = await request.json();
 
     if (!patientId || !clinicId) {
       return NextResponse.json(
@@ -27,7 +27,8 @@ export async function POST(
         clinicId,
         diagnoses,
         treatments,
-        images,
+        followUpImages,
+        radiologyImages,
     });
 
     return NextResponse.json({ message: "Visit recorded successfully" }, { status: 201 });

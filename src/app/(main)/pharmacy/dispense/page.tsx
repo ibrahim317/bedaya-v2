@@ -273,6 +273,22 @@ export default function DispenseTreatmentPage() {
     return <Table columns={columns} dataSource={record.medications} pagination={false} rowKey={(med) => med.drug.barcode} />;
   };
 
+  const calculateTotalPills = (medication: any, allDrugs: IDrugWithId[]) => {
+    if (!medication || !medication.drug || !medication.unit || !medication.quantity) {
+      return 0;
+    }
+    const selectedDrug = allDrugs.find(d => d._id === medication.drug);
+    if (!selectedDrug) return 0;
+
+    let totalPills = medication.quantity;
+    if (medication.unit === 'boxes') {
+      totalPills = medication.quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
+    } else if (medication.unit === 'strips') {
+      totalPills = medication.quantity * (selectedDrug.pillsPerStrip || 1);
+    }
+    return totalPills;
+  }
+
   const renderMedicationFormList = (formInstance: typeof form | typeof editForm) => (
     <Form.List name="medications">
       {(fields, { add, remove }) => (
@@ -347,37 +363,15 @@ export default function DispenseTreatmentPage() {
               </Form.Item>
 
               <Form.Item
-                noStyle
+                label="Remains (Pills)"
                 shouldUpdate={(prevValues, currentValues) =>
-                  prevValues.medications?.[name]?.unit !== currentValues.medications?.[name]?.unit ||
-                  prevValues.medications?.[name]?.quantity !== currentValues.medications?.[name]?.quantity ||
-                  prevValues.medications?.[name]?.drug !== currentValues.medications?.[name]?.drug
+                  prevValues.medications?.[name] !== currentValues.medications?.[name]
                 }
               >
                 {({ getFieldValue }) => {
-                  const unit = getFieldValue(['medications', name, 'unit']);
-                  const quantity = getFieldValue(['medications', name, 'quantity']) || 0;
-                  const drugId = getFieldValue(['medications', name, 'drug']);
-                  const selectedDrug = drugs.find(d => d._id === drugId);
-                  
-                  if (!selectedDrug || !unit || quantity === 0) return null;
-                  
-                  let totalPills = quantity;
-                  if (unit === 'boxes') {
-                    totalPills = quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
-                  } else if (unit === 'strips') {
-                    totalPills = quantity * (selectedDrug.pillsPerStrip || 1);
-                  }
-
-                  if (unit !== 'pills') {
-                    return (
-                      <Typography.Text>
-                        ({totalPills} pills)
-                      </Typography.Text>
-                    );
-                  }
-                  
-                  return null;
+                  const medication = getFieldValue(['medications', name]);
+                  const totalPills = calculateTotalPills(medication, drugs);
+                  return <InputNumber value={totalPills} disabled />;
                 }}
               </Form.Item>
               

@@ -6,7 +6,8 @@ const ClinicVisitSchema: Schema<IClinicVisit> = new Schema({
   clinicId: { type: Schema.Types.ObjectId, ref: 'Clinic', required: true, index: true },
   diagnoses: { type: [String], default: [] },
   treatments: { type: [String], default: [] },
-  images: { type: [String], default: [] },
+  followUpImages: { type: [String], default: [] },
+  radiologyImages: { type: [String], default: [] },
 }, { timestamps: true });
 
 const ClinicVisit: Model<IClinicVisit> = models.ClinicVisit || model<IClinicVisit>('ClinicVisit', ClinicVisitSchema);

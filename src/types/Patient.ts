@@ -349,6 +349,4 @@ export interface IPatient extends Document {
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
-  followUpImages?: string[];
-  screeningImages?: string[];
 }

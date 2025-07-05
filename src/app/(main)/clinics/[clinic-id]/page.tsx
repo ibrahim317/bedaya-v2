@@ -1,11 +1,13 @@
 "use client";
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, Select, Form, Spin, Button, message, Table, Image } from 'antd';
+import { Card, Select, Form, Spin, Button, message, Table, Image, Row, Col, Statistic, Tabs } from 'antd';
 import { clinicsClient, IClinic } from '@/clients/clinicsClient';
 import { searchPatients } from '@/clients/patientClient';
 import { IPatient } from '@/types/Patient';
 import ImageUploader from '@/app/(main)/patients/components/ImageUploader';
 import { IClinicVisit } from '@/types/ClinicVisit';
+
+const { TabPane } = Tabs;
 
 interface ClinicPageProps {
   params: {
@@ -19,12 +21,14 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [selectedDiagnoses, setSelectedDiagnoses] = useState<string[]>([]);
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>([]);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [followUpImages, setFollowUpImages] = useState<string[]>([]);
+  const [radiologyImages, setRadiologyImages] = useState<string[]>([]);
   const [searchedPatients, setSearchedPatients] = useState<IPatient[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visitHistory, setVisitHistory] = useState<IClinicVisit[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [stats, setStats] = useState<{ totalVisits: number; referredVisits: number } | null>(null);
 
   const clinicId = params['clinic-id'];
 
@@ -43,6 +47,18 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
   useEffect(() => {
     fetchClinic();
   }, [fetchClinic]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const clinicStats = await clinicsClient.getClinicStats(clinicId);
+        setStats(clinicStats);
+      } catch (error) {
+        message.error("Failed to fetch clinic stats.");
+      }
+    };
+    fetchStats();
+  }, [clinicId]);
 
   useEffect(() => {
     const fetchVisitHistory = async () => {
@@ -104,13 +120,15 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
             patientId: selectedPatient,
             diagnoses: selectedDiagnoses,
             treatments: selectedTreatments,
-            images: imageUrls,
+            followUpImages,
+            radiologyImages,
         });
         message.success("Visit saved successfully!");
         setSelectedPatient(null);
         setSelectedDiagnoses([]);
         setSelectedTreatments([]);
-        setImageUrls([]);
+        setFollowUpImages([]);
+        setRadiologyImages([]);
         setSearchedPatients([]);
         const history = await clinicsClient.getPatientVisitHistory(clinicId, selectedPatient);
         setVisitHistory(history);
@@ -129,6 +147,18 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">{clinic?.name}</h1>
+      <Row gutter={16} className="mb-6">
+        <Col span={12}>
+          <Card>
+            <Statistic title="Total Visits" value={stats?.totalVisits ?? '...'} />
+          </Card>
+        </Col>
+        <Col span={12}>
+          <Card>
+            <Statistic title="Referred from Check-up" value={stats?.referredVisits ?? '...'} />
+          </Card>
+        </Col>
+      </Row>
       <Form layout="vertical" className="mb-6" onFinish={handleSubmit}>
         <Form.Item label="Patient">
           <Select
@@ -164,13 +194,26 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
           </Select>
         </Form.Item>
         {clinic?.enableImages && (
-          <Form.Item label="Images">
-            <ImageUploader
-              onUpload={setImageUrls}
-              fieldName="clinicRecordImages"
-              initialImageUrls={[]}
-            />
-          </Form.Item>
+          <Tabs>
+            <TabPane tab="Follow up" key="1">
+              <Form.Item>
+                <ImageUploader
+                  onUpload={setFollowUpImages}
+                  fieldName="followUpImages"
+                  initialImageUrls={[]}
+                />
+              </Form.Item>
+            </TabPane>
+            <TabPane tab="Radiology" key="2">
+              <Form.Item>
+                <ImageUploader
+                  onUpload={setRadiologyImages}
+                  fieldName="radiologyImages"
+                  initialImageUrls={[]}
+                />
+              </Form.Item>
+            </TabPane>
+          </Tabs>
         )}
         <Form.Item label="Treatment">
           <Select
@@ -222,19 +265,33 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
             expandable={{
               expandedRowRender: (record) => (
                 <div>
-                  <p style={{ margin: 0 }}>Images:</p>
-                  {record.images && record.images.length > 0 ? (
-                     <Image.PreviewGroup>
-                        {record.images.map((url, index) => (
-                            <Image key={index} width={100} src={url} />
+                  {record.followUpImages && record.followUpImages.length > 0 && (
+                    <>
+                      <p style={{ margin: '16px 0 8px' }}>Follow up Images:</p>
+                      <Image.PreviewGroup>
+                        {record.followUpImages.map((url, index) => (
+                          <Image key={`follow-up-${index}`} width={100} src={url} />
                         ))}
-                    </Image.PreviewGroup>
-                  ) : (
-                    'No images for this visit.'
+                      </Image.PreviewGroup>
+                    </>
                   )}
+                  {record.radiologyImages && record.radiologyImages.length > 0 && (
+                    <>
+                      <p style={{ margin: '16px 0 8px' }}>Radiology Images:</p>
+                      <Image.PreviewGroup>
+                        {record.radiologyImages.map((url, index) => (
+                          <Image key={`radiology-${index}`} width={100} src={url} />
+                        ))}
+                      </Image.PreviewGroup>
+                    </>
+                  )}
+                  {(!record.followUpImages || record.followUpImages.length === 0) &&
+                   (!record.radiologyImages || record.radiologyImages.length === 0) &&
+                   'No images for this visit.'
+                  }
                 </div>
               ),
-              rowExpandable: (record) => record.images && record.images.length > 0,
+              rowExpandable: (record) => (record.followUpImages && record.followUpImages.length > 0) || (record.radiologyImages && record.radiologyImages.length > 0),
             }}
             pagination={false}
           />

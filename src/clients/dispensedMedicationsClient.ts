@@ -37,4 +37,11 @@ export const dispensedMedicationsClient = {
       body: JSON.stringify(data),
     });
   },
+  async getDailyDispensedStats(): Promise<{ date: string; count: number }[]> {
+    const response = await fetch('/api/pharmacy/stats/dispensed-per-day');
+    if (!response.ok) {
+      throw new Error('Failed to fetch daily dispensed stats');
+    }
+    return response.json();
+  }
 }; 

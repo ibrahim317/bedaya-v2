@@ -222,3 +222,36 @@ export const dispensedMedicationService = {
     };
   },
 };
+
+
+export async function getDailyDispensedMedicationStats(): Promise<{ date: string; count: number }[]> {
+  await connectDB();
+  try {
+    const stats = await DispensedMedication.aggregate([
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          date: '$_id',
+          count: '$count',
+        },
+      },
+      {
+        $sort: { date: 1 },
+      },
+    ]);
+    return stats;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to get daily dispensed medication stats');
+  }
+}

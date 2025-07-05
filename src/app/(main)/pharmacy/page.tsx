@@ -14,7 +14,10 @@ import {
   Row,
   Card,
   Tabs,
+  Spin,
+  Alert,
 } from "antd";
+import { Line } from '@ant-design/charts';
 import type { ColumnsType } from "antd/es/table";
 import {
   DeleteOutlined,
@@ -58,6 +61,11 @@ export default function PharmacyPage() {
     total: 0,
   });
 
+  // Dashboard state
+  const [dailyStats, setDailyStats] = useState<{ date: string; count: number }[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
+
   const messageApiRef = useRef(message.useMessage()[0]);
 
   const fetchDrugs = async (page = 1, pageSize = 10, search = "") => {
@@ -86,6 +94,19 @@ export default function PharmacyPage() {
     }
   };
 
+  const fetchDailyStats = async () => {
+    try {
+      setStatsLoading(true);
+      const data = await dispensedMedicationsClient.getDailyDispensedStats();
+      setDailyStats(data);
+      setStatsError(null);
+    } catch (error) {
+      setStatsError("Failed to fetch daily stats");
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'drugs') {
       fetchDrugs(drugsPagination.current, drugsPagination.pageSize, debouncedDrugsSearch);
@@ -97,6 +118,13 @@ export default function PharmacyPage() {
       fetchTreatments(treatmentsPagination.current, treatmentsPagination.pageSize, debouncedTreatmentsSearch);
     }
   }, [treatmentsPagination.current, treatmentsPagination.pageSize, activeTab, debouncedTreatmentsSearch]);
+
+  useEffect(() => {
+    if (activeTab === 'dashboard') {
+      fetchDailyStats();
+    }
+  }, [activeTab]);
+
 
   const handleDrugsTableChange = (pagination: any) => {
     fetchDrugs(pagination.current, pagination.pageSize, drugsSearchText);
@@ -175,6 +203,39 @@ export default function PharmacyPage() {
     ];
     return <Table columns={columns} dataSource={record.medications} pagination={false} rowKey={(med) => med.drug.barcode} />;
   };
+  
+  const lineConfig = {
+    data: dailyStats,
+    xField: 'date',
+    yField: 'count',
+    point: {
+      shape: 'diamond',
+      size: 4,
+    },
+    label: {
+      style: {
+        fill: '#aaa',
+      },
+    },
+    yAxis: {
+      min: 0,
+    },
+    xAxis: {
+      label: {
+        autoHide: true,
+        autoRotate: false,
+      },
+    },
+    meta: {
+      count: {
+        alias: 'Dispensed Count',
+      },
+      date: {
+        alias: 'Date',
+      },
+    },
+  };
+
 
   return (
     <div className="p-6">
@@ -188,6 +249,18 @@ export default function PharmacyPage() {
         </Row>
 
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
+          <TabPane tab="Dashboard" key="dashboard">
+            <Title level={3} className="mb-4">Dispensed Medications per Day</Title>
+            {statsLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <Spin size="large" />
+              </div>
+            ) : statsError ? (
+              <Alert message="Error" description={statsError} type="error" showIcon />
+            ) : (
+              <Line {...lineConfig} />
+            )}
+          </TabPane>
           <TabPane tab="Drugs" key="drugs">
             <Row justify="space-between" align="middle" className="mb-4">
               <Col>

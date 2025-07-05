@@ -118,7 +118,7 @@ export const clinicsClient = {
     });
   },
 
-  async createClinicVisit(clinicId: string, payload: { patientId: string; diagnoses: string[]; treatments: string[]; images?: string[] }) {
+  async createClinicVisit(clinicId: string, payload: { patientId: string; diagnoses: string[]; treatments: string[]; followUpImages?: string[], radiologyImages?: string[] }) {
     const response = await fetch(`/api/clinics/${clinicId}/records`, {
         method: 'POST',
         headers: {
@@ -141,5 +141,9 @@ export const clinicsClient = {
 
   async getPatientVisitHistory(clinicId: string, patientId: string): Promise<IClinicVisit[]> {
     return await fetchJson(`/api/clinics/${clinicId}/patients/${patientId}/visits`);
+  },
+
+  async getClinicStats(clinicId: string): Promise<{ totalVisits: number; referredVisits: number }> {
+    return await fetchJson(`/api/clinics/${clinicId}/stats`);
   }
 }; 
