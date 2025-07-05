@@ -3,7 +3,7 @@
 import { useCallback, useState, useEffect } from "react";
 import { Table, Button, Card, App, Tag, Input, Select, Row, Col, Statistic } from "antd";
 import { useRouter } from "next/navigation";
-import { fetchPatients, updateLabTest } from "@/clients/patientClient";
+import { fetchPatients, updateLabTest, updatePatient } from "@/clients/patientClient";
 import { getDashboardStats } from "@/clients/dashboard";
 import {
   PatientType,
@@ -116,13 +116,26 @@ const LabsPage = () => {
     type: "adult" | "child"
   ) => {
     try {
-      const updatedPatient = await updateLabTest(patientId, {
+      let updatedPatient = await updateLabTest(patientId, {
         labTestName,
         status,
       });
       message.success(
         `Successfully updated ${labTestName} status for patient ${updatedPatient.name}`
       );
+
+      if (
+        status === PatientLabTestStatus.CheckedIn &&
+        updatedPatient.overAllLabsStatus !== "Checked In"
+      ) {
+        updatedPatient = await updatePatient(patientId, {
+          overAllLabsStatus: "Checked In",
+        });
+        message.info(
+          `Overall lab status set to "Checked In" for patient ${updatedPatient.name}`
+        );
+      }
+      
       // Update local data to avoid refetch
       setData((prev) => {
         const patientList = prev[type];
@@ -146,6 +159,43 @@ const LabsPage = () => {
       message.error(error.message || `Failed to update ${labTestName} status`);
     }
   };
+
+  const handleOverallStatusChange = async (
+    patientId: string,
+    status: "Not Requested" | "Checked In" | "Checked Out",
+    type: "adult" | "child"
+  ) => {
+    try {
+      const updatedPatient = await updatePatient(patientId, {
+        overAllLabsStatus: status,
+      });
+      message.success(
+        `Successfully updated overall lab status for patient ${updatedPatient.name}`
+      );
+      // Update local data to avoid refetch
+      setData((prev) => {
+        const patientList = prev[type];
+        const patientIndex = patientList.findIndex(
+          (p) => p._id === patientId
+        );
+
+        if (patientIndex === -1) {
+          return prev;
+        }
+
+        const updatedPatientList = [...patientList];
+        updatedPatientList[patientIndex] = updatedPatient;
+
+        return {
+          ...prev,
+          [type]: updatedPatientList,
+        };
+      });
+    } catch (error: any) {
+      message.error(error.message || `Failed to update overall lab status`);
+    }
+  };
+
 
   const handleTableChange = (
     type: "adult" | "child",
@@ -214,34 +264,6 @@ const LabsPage = () => {
     },
   });
 
-  const getOverallStatus = (patient: IPatient) => {
-    if (!patient.labTest || patient.labTest.length === 0) {
-      return { text: 'No Tests', color: 'default' };
-    }
-  
-    const allOut = patient.labTest.every(
-      (lt) => lt.status === PatientLabTestStatus.CheckedOut
-    );
-    if (allOut) {
-      return { text: 'Out', color: 'green' };
-    }
-  
-    const anyIn = patient.labTest.some(
-      (lt) => lt.status === PatientLabTestStatus.CheckedIn
-    );
-    if (anyIn) {
-      return { text: 'In', color: 'blue' };
-    }
-    
-    const anyNotRequested = patient.labTest.some(
-      (lt) => lt.status === PatientLabTestStatus.NotRequested
-    );
-    if (anyNotRequested) {
-      return { text: 'Pending', color: 'gold' };
-    }
-  
-    return { text: 'N/A', color: 'default' };
-  };
 
   const getColumns = (type: "adult" | "child") => [
     {
@@ -257,12 +279,45 @@ const LabsPage = () => {
       width: "10%",
     },
     {
-      title: 'Overall Status',
-      key: 'overallStatus',
-      width: '10%',
+      title: "Overall Status",
+      key: "overallStatus",
+      width: "10%",
       render: (record: IPatient) => {
-        const status = getOverallStatus(record);
-        return <Tag color={status.color}>{status.text}</Tag>;
+        const hasCheckedInLab = record.labTest?.some(
+          (test) => test.status === PatientLabTestStatus.CheckedIn
+        );
+        const hasProgressedLab = record.labTest?.some(
+          (test) =>
+            test.status === PatientLabTestStatus.CheckedIn ||
+            test.status === PatientLabTestStatus.CheckedOut
+        );
+        return (
+          <Select
+            value={record.overAllLabsStatus || "Not Requested"}
+            onChange={(newStatus) =>
+              handleOverallStatusChange(
+                String(record._id),
+                newStatus as "Not Requested" | "Checked In" | "Checked Out",
+                type
+              )
+            }
+          >
+            {(["Not Requested", "Checked In", "Checked Out"] as const).map(
+              (s) => (
+                <Option
+                  key={s}
+                  value={s}
+                  disabled={
+                    (s === "Checked Out" && hasCheckedInLab) ||
+                    (s === "Not Requested" && hasProgressedLab)
+                  }
+                >
+                  {s}
+                </Option>
+              )
+            )}
+          </Select>
+        );
       },
     },
     {

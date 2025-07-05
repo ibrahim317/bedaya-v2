@@ -472,6 +472,7 @@ const PatientSchema: Schema<IPatient> = new Schema(
     attachments: { type: [AttachmentSchema], default: [] },
     drugs: { type: [PatientDrugSchema], default: [] },
     labTest: { type: [PatientLabTestSchema], default: [] },
+    overAllLabsStatus: { type: String, enum: ["Not Requested", "Checked In", "Checked Out"], default: "Not Requested" },
   },
   { timestamps: true }
 );

@@ -338,6 +338,7 @@ export interface IPatient extends Document {
   icuHistory?: ICUHistory;
   followUpType?: "Pediatric" | "Other";
   localExamination?: LocalExamination;
+  overAllLabsStatus?: "Not Requested" | "Checked In" | "Checked Out";
 
   // Embedded Arrays
   complaints: string[];
