@@ -12,6 +12,7 @@ interface AdultPatientFormProps {
   initialValues: any;
   onFinish: (values: any) => void;
   onFinishAndCreateNext?: (values: any) => void;
+  onValuesChange?: (changedValues: any, allValues: any) => void;
   submitLabel?: string;
   form?: any;
   loading?: boolean;
@@ -22,6 +23,7 @@ const AdultPatientForm = ({
   initialValues,
   onFinish,
   onFinishAndCreateNext,
+  onValuesChange,
   submitLabel = "Create Patient",
   form,
   loading = false,
@@ -34,6 +36,7 @@ const AdultPatientForm = ({
     <Form
       form={usedForm}
       onFinish={onFinish}
+      onValuesChange={onValuesChange}
       layout="vertical"
       initialValues={initialValues}
     >

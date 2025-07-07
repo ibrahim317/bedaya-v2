@@ -58,7 +58,7 @@ const UrineLabPage = () => {
           const fetchedPatient = await fetchPatientById(patientId);
           setPatient(fetchedPatient);
 
-          const urineTest = fetchedPatient.labTest?.find(
+          const urineTest = fetchedPatient?.labTest?.find(
             (test) => test.labTestName === "Urine"
           );
 

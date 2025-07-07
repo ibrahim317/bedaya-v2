@@ -23,8 +23,13 @@ export async function GET(request: Request, { params }: RouteParams) {
         { status: 404 }
       );
     }
+    const clinicObj = clinic.toObject();
 
-    return NextResponse.json(clinic);
+    return NextResponse.json({
+        ...clinicObj,
+        commonDiagnoses: clinicObj.commonDiagnoses || [],
+        commonTreatments: clinicObj.commonTreatments || [],
+    });
   } catch (error) {
     console.error('Failed to fetch clinic:', error);
     return NextResponse.json(

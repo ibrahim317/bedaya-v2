@@ -115,14 +115,22 @@ export default function ClinicDetailsPage({ params }: PageProps) {
     },
   };
 
+  // Ensure we have valid arrays for table data
+  const diagnosesData = clinic?.commonDiagnoses && Array.isArray(clinic.commonDiagnoses) ? clinic.commonDiagnoses : [];
+  const treatmentsData = clinic?.commonTreatments && Array.isArray(clinic.commonTreatments) ? clinic.commonTreatments : [];
+
   const diagnosisColumns: ColumnsType<IClinic['commonDiagnoses'][0]> = [
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
       filteredValue: searchText ? [searchText] : null,
-      onFilter: (value, record) => 
-        record.name.toLowerCase().includes(String(value).toLowerCase()),
+      onFilter: (value, record) => {
+        if (!record || !record.name || typeof record.name !== 'string') {
+          return false;
+        }
+        return record.name.toLowerCase().includes(String(value).toLowerCase());
+      },
     },
     {
       title: 'Actions',
@@ -149,8 +157,12 @@ export default function ClinicDetailsPage({ params }: PageProps) {
       dataIndex: 'name',
       key: 'name',
       filteredValue: searchText ? [searchText] : null,
-      onFilter: (value, record) => 
-        record.name.toLowerCase().includes(String(value).toLowerCase()),
+      onFilter: (value, record) => {
+        if (!record || !record.name || typeof record.name !== 'string') {
+          return false;
+        }
+        return record.name.toLowerCase().includes(String(value).toLowerCase());
+      },
     },
     {
       title: 'Actions',
@@ -212,7 +224,7 @@ export default function ClinicDetailsPage({ params }: PageProps) {
           <Table
             rowSelection={rowSelection}
             columns={diagnosisColumns}
-            dataSource={clinic?.commonDiagnoses || []}
+            dataSource={diagnosesData}
             rowKey="_id"
             loading={loading}
             pagination={{
@@ -264,7 +276,7 @@ export default function ClinicDetailsPage({ params }: PageProps) {
           <Table
             rowSelection={rowSelection}
             columns={treatmentColumns}
-            dataSource={clinic?.commonTreatments || []}
+            dataSource={treatmentsData}
             rowKey="_id"
             loading={loading}
             pagination={{
@@ -307,10 +319,25 @@ export default function ClinicDetailsPage({ params }: PageProps) {
     },
   ];
 
-  if (!clinic) {
+  // Add additional guard clause to prevent rendering with invalid data
+  if (loading) {
     return (
       <div className="p-6 text-center">
         <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (!clinic) {
+    return (
+      <div className="p-6 text-center">
+        <div>Clinic not found</div>
+        <Button 
+          onClick={() => router.push('/clinics-management')}
+          className="mt-4"
+        >
+          Back to Clinics
+        </Button>
       </div>
     );
   }

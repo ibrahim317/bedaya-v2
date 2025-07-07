@@ -54,7 +54,7 @@ const StoolLabPage = () => {
           const fetchedPatient = await fetchPatientById(patientId);
           setPatient(fetchedPatient);
 
-          const stoolTest = fetchedPatient.labTest?.find(
+          const stoolTest = fetchedPatient?.labTest?.find(
             (test) => test.labTestName === "Stool"
           );
 

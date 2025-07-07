@@ -1,149 +1,38 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
-import { Table, Input, Button, Card, App, Popconfirm } from "antd";
+import { Table, Input, Button, Card, App, Popconfirm, Tabs } from "antd";
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { fetchPatients, deletePatient } from "@/clients/patientClient";
-import { PatientType } from "@/types/Patient";
+import { cacheService } from "@/services/cacheService";
+import { PatientType, IPatient } from "@/types/Patient";
 import dayjs from "dayjs";
+import OfflineTable from "@/components/OfflineTable";
+import { STORE_NAMES } from "@/types/IndexedDB";
+import { useMemo } from "react";
 
 const { Search } = Input;
-
-interface Patient {
-  _id: string;
-  name: string;
-  code: string;
-  sex: string;
-  age: number;
-  mobileNumber?: string;
-  checkupDay: number;
-  createdAt: string;
-  type: PatientType;
-}
-
-interface TableData {
-  adult: Patient[];
-  child: Patient[];
-}
-
-interface TableParams {
-  search: string;
-  sortField: string;
-  sortOrder: "ascend" | "descend" | null;
-  page: number;
-  pageSize: number;
-}
+const { TabPane } = Tabs;
 
 const PatientListPage = () => {
   const router = useRouter();
   const { message } = App.useApp();
-  const [loading, setLoading] = useState({ adult: false, child: false });
-  const [data, setData] = useState<TableData>({ adult: [], child: [] });
-  const [pagination, setPagination] = useState({
-    adult: { current: 1, pageSize: 10, total: 0 },
-    child: { current: 1, pageSize: 10, total: 0 },
-  });
+  const [activeTab, setActiveTab] = useState<"adult" | "child">("adult");
+  const [search, setSearch] = useState({ adult: "", child: "" });
 
-  const [tableParams, setTableParams] = useState<{
-    adult: TableParams;
-    child: TableParams;
-  }>({
-    adult: {
-      search: "",
-      sortField: "createdAt",
-      sortOrder: "descend",
-      page: 1,
-      pageSize: 10,
-    },
-    child: {
-      search: "",
-      sortField: "createdAt",
-      sortOrder: "descend",
-      page: 1,
-      pageSize: 10,
-    },
-  });
-
-  const fetchTableData = useCallback(
-    async (type: "adult" | "child") => {
-      try {
-        setLoading({ ...loading, [type]: true });
-        const params = tableParams[type];
-        
-        const response = await fetchPatients({
-          type: type === "adult" ? PatientType.Adult : PatientType.Child,
-          search: params.search,
-          sortField: params.sortField,
-          sortOrder: params.sortOrder === "ascend" ? "asc" : "desc",
-          page: params.page,
-          pageSize: params.pageSize,
-        });
-
-        setData((prev) => ({ ...prev, [type]: response.data }));
-        setPagination((prev) => ({
-          ...prev,
-          [type]: {
-            ...prev[type],
-            total: response.pagination.total,
-          },
-        }));
-      } catch (error) {
-        message.error("Failed to fetch patients");
-      } finally {
-        setLoading({ ...loading, [type]: false });
-      }
-    },
-    [tableParams, message]
-  );
-
-  const handleTableChange = (
-    type: "adult" | "child",
-    pagination: any,
-    filters: any,
-    sorter: any
-  ) => {
-    setTableParams((prev) => ({
-      ...prev,
-      [type]: {
-        ...prev[type],
-        page: pagination.current,
-        pageSize: pagination.pageSize,
-        sortField: sorter.field || "createdAt",
-        sortOrder: sorter.order || "descend",
-      },
-    }));
-  };
-
-  const handleSearch = (type: "adult" | "child", value: string) => {
-    setTableParams((prev) => ({
-      ...prev,
-      [type]: {
-        ...prev[type],
-        search: value,
-        page: 1,
-      },
-    }));
-  };
-
-  const handleDelete = async (type: "adult" | "child", id: string) => {
+  const handleDelete = async (id: string) => {
     try {
-      setLoading((prev) => ({ ...prev, [type]: true }));
       await deletePatient(id);
       message.success("Patient deleted successfully");
-      setData(prev => ({
-        ...prev,
-        [type]: Array.isArray(prev[type]) ? prev[type].filter(patient => patient._id !== id) : []
-      }));
-      fetchTableData(type);
+      // Here we would ideally trigger a refresh of the offline table
+      // For now, the table will refetch on the next online/offline state change
     } catch (error: any) {
       message.error(error.message || "Failed to delete patient");
-    } finally {
-      setLoading((prev) => ({ ...prev, [type]: false }));
     }
   };
 
-  const columns = [
+  const columns = useMemo(() => (type: "adult" | "child") => [
     {
       title: "Name",
       dataIndex: "name",
@@ -192,118 +81,91 @@ const PatientListPage = () => {
         <div className="flex gap-2">
           <Button
             icon={<EditOutlined />}
-            onClick={() => router.push(`/patients/update-${record.type}/${record._id}`)}
+            onClick={() => router.push(`/patients/update-${type}/${record._id}`)}
             size="small"
           >
             Edit
           </Button>
           <Popconfirm
-            title="Are you sure to delete this patient?"
-            onConfirm={() => handleDelete(record.type, record._id)}
-            okText="Yes"
-            cancelText="No"
+            title="Are you sure you want to delete this patient?"
+            onConfirm={() => handleDelete(record._id)}
           >
-            <Button
-              icon={<DeleteOutlined />}
-              danger
-              size="small"
-            >
+            <Button icon={<DeleteOutlined />} danger size="small">
               Delete
             </Button>
           </Popconfirm>
         </div>
       ),
     },
-  ];
+  ], [router]);
 
-  useEffect(() => {
-    fetchTableData("adult");
-  }, [
-    tableParams.adult.search,
-    tableParams.adult.sortField,
-    tableParams.adult.sortOrder,
-    tableParams.adult.page,
-    tableParams.adult.pageSize,
-  ]);
+  const fetchData = useCallback(async (type: "adult" | "child") => {
+    const patientType = type === "adult" ? PatientType.Adult : PatientType.Child;
+    const response = await fetchPatients({
+      type: patientType,
+      search: search[type],
+      page: 1,
+      pageSize: 100,
+    });
+    return response;
+  }, [search]);
 
-  useEffect(() => {
-    fetchTableData("child");
-  }, [
-    tableParams.child.search,
-    tableParams.child.sortField,
-    tableParams.child.sortOrder,
-    tableParams.child.page,
-    tableParams.child.pageSize,
-  ]);
+  const getCachedData = useCallback(async (type: "adult" | "child") => {
+    const patientType = type === "adult" ? PatientType.Adult : PatientType.Child;
+    const result = await cacheService.query<IPatient>({
+      store: STORE_NAMES.PATIENTS,
+      filter: (p) => p.data.type === patientType,
+    });
+    return result.items;
+  }, []);
+
+
+  const renderTable = (type: "adult" | "child") => {
+    return (
+      <OfflineTable
+        fetchData={() => fetchData(type)}
+        getCachedData={() => getCachedData(type)}
+        cacheKey={`${type}-patients-${search[type]}`}
+        columns={columns(type)}
+        rowKey="_id"
+      />
+    );
+  };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Adult Patients */}
+    <div className="md:p-6">
       <Card
-        title="Adult Patients"
         className="overflow-x-auto"
+        title="Patient Management"
         extra={
           <div className="flex gap-4">
             <Search
-              placeholder="Search patients..."
-              allowClear
-              onSearch={(value) => handleSearch("adult", value)}
+              placeholder={`Search ${activeTab} patients`}
+              onSearch={(value) => setSearch({ ...search, [activeTab]: value })}
               style={{ width: 250 }}
             />
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={() => router.push("/patients/create-adult")}
+              onClick={() => router.push(`/patients/create-${activeTab}`)}
             >
-              Add Adult Patient
+              Create {activeTab === "adult" ? "Adult" : "Child"} Patient
             </Button>
           </div>
         }
       >
-        <Table
-          columns={columns}
-          rowKey="_id"
-          dataSource={data.adult}
-          pagination={pagination.adult}
-          loading={loading.adult}
-          onChange={(pagination, filters, sorter) =>
-            handleTableChange("adult", pagination, filters, sorter)
-          }
-        />
-      </Card>
-
-      {/* Child Patients */}
-      <Card
-        title="Child Patients"
-        className="overflow-x-auto"
-        extra={
-          <div className="flex gap-4">
-            <Search
-              placeholder="Search patients..."
-              allowClear
-              onSearch={(value) => handleSearch("child", value)}
-              style={{ width: 250 }}
-            />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => router.push("/patients/create-child")}
-            >
-              Add Child Patient
-            </Button>
-          </div>
-        }
-      >
-        <Table
-          columns={columns}
-          rowKey="_id"
-          dataSource={data.child}
-          pagination={pagination.child}
-          loading={loading.child}
-          onChange={(pagination, filters, sorter) =>
-            handleTableChange("child", pagination, filters, sorter)
-          }
-        />
+        <Tabs
+          activeKey={activeTab}
+          onChange={(key) => setActiveTab(key as any)}
+          destroyInactiveTabPane
+        >
+          <TabPane tab="Adult Patients" key="adult">
+            {renderTable("adult")}
+          </TabPane>
+          <TabPane tab="Child Patients" key="child">
+            {renderTable("child")}
+          </TabPane>
+        </Tabs>
       </Card>
     </div>
   );

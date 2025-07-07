@@ -40,7 +40,7 @@ export default function DispenseTreatmentPage() {
           searchPatients(''),
           drugsClient.getDrugs(1, 10000, '')
         ]);
-        setPatients(patientData.data);
+        setPatients(patientData);
         setDrugs(drugData.drugs);
       } catch (error) {
         message.error('Failed to load data');

@@ -49,7 +49,7 @@ const BloodLabPage = () => {
           const fetchedPatient = await fetchPatientById(patientId);
           setPatient(fetchedPatient);
 
-          const bloodTest = fetchedPatient.labTest?.find(
+          const bloodTest = fetchedPatient?.labTest?.find(
             (test) => test.labTestName === "Blood"
           );
 

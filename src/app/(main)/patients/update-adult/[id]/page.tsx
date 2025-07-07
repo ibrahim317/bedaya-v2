@@ -20,7 +20,7 @@ const UpdateAdultPatientPage = () => {
     const fetchData = async () => {
       try {
         const patient = await fetchPatientById(patientId);
-        setInitialValues(setOtherEnabled(patient));
+        setInitialValues(setOtherEnabled(patient as IPatient));
       } catch (error: any) {
         message.error(error.message || "Failed to fetch patient data");
         router.push("/patients");

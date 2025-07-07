@@ -58,7 +58,7 @@ const AlbuminCreatLabPage = () => {
           const fetchedPatient = await fetchPatientById(patientId);
           setPatient(fetchedPatient);
 
-          const albuminCreatTest = fetchedPatient.labTest?.find(
+          const albuminCreatTest = fetchedPatient?.labTest?.find(
             (test) => test.labTestName === "Albumin-Creat"
           );
 

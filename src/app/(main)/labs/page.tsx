@@ -82,12 +82,12 @@ const LabsPage = () => {
           search: params.search,
         });
 
-        setData((prev) => ({ ...prev, [type]: response.data }));
+        setData((prev) => ({ ...prev, [type]: response }));
         setPagination((prev) => ({
           ...prev,
           [type]: {
             ...prev[type],
-            total: response.pagination.total,
+            total: response.length,
             current: params.page,
             pageSize: params.pageSize,
           },
@@ -116,7 +116,7 @@ const LabsPage = () => {
     type: "adult" | "child"
   ) => {
     try {
-      let updatedPatient = await updateLabTest(patientId, {
+      let updatedPatient: IPatient = await updateLabTest(patientId, {
         labTestName,
         status,
       });
@@ -166,7 +166,7 @@ const LabsPage = () => {
     type: "adult" | "child"
   ) => {
     try {
-      const updatedPatient = await updatePatient(patientId, {
+      const updatedPatient: IPatient = await updatePatient(patientId, {
         overAllLabsStatus: status,
       });
       message.success(

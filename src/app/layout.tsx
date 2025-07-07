@@ -7,12 +7,16 @@ import AntdRegistry from "@/providers/AntdRegistry";
 import ThemeProvider from "@/providers/ThemeProvider";
 import { App as AntApp } from 'antd';
 import QueryProvider from '@/providers/QueryProvider';
+import OfflineNotification from '@/components/OfflineNotification';
+import OfflineProvider from '@/providers/OfflineProvider';
+import SyncProgress from '@/components/SyncProgress';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: "Bedaya Patient Management System",
   description: "Bedaya Patient Management System",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -22,14 +26,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="theme-color" content="#000000" />
+      </head>
       <body className={`${inter.className} antialiased`}>
         <AntdRegistry>
           <ThemeProvider>
-            <AuthProvider>
-              <QueryProvider>
-                <AntApp>{children}</AntApp>
-              </QueryProvider>
-            </AuthProvider>
+            <OfflineProvider>
+              <AuthProvider>
+                <QueryProvider>
+                  <AntApp>
+                    <OfflineNotification />
+                    {children}
+                    <SyncProgress />
+                  </AntApp>
+                </QueryProvider>
+              </AuthProvider>
+            </OfflineProvider>
           </ThemeProvider>
         </AntdRegistry>
       </body>

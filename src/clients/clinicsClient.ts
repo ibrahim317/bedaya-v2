@@ -1,5 +1,7 @@
 import { fetchJson } from './base';
 import { IClinicVisit } from '@/types/ClinicVisit';
+import { offlineClient } from './offlineClient';
+import { STORE_NAMES } from '@/types/IndexedDB';
 
 export interface IClinic {
   _id: string;
@@ -27,24 +29,24 @@ export const clinicsClient = {
    * Get all clinics with counts
    */
   async getAllClinics(): Promise<IClinicSummary[]> {
-    return await fetchJson<IClinicSummary[]>('/api/clinics');
+    const url = '/api/clinics';
+    return await offlineClient.getAll<IClinicSummary>(STORE_NAMES.CLINICS_SUMMARY, url);
   },
 
   /**
    * Get a single clinic by ID with full details
    */
-  async getClinicById(id: string): Promise<IClinic> {
-    return await fetchJson<IClinic>(`/api/clinics/${id}`);
+  async getClinicById(id: string, options?: { forceRefresh: boolean }): Promise<IClinic | null> {
+    const url = `/api/clinics/${id}`;
+    return await offlineClient.get<IClinic>(STORE_NAMES.CLINICS, id, url, options);
   },
 
   /**
    * Create a new clinic
    */
   async createClinic(name: string): Promise<IClinic> {
-    return await fetchJson<IClinic>('/api/clinics', {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    });
+    const url = '/api/clinics';
+    return await offlineClient.post<IClinic>(STORE_NAMES.CLINICS, url, { name });
   },
 
   /**
@@ -54,96 +56,83 @@ export const clinicsClient = {
     id: string,
     data: Partial<Omit<IClinic, '_id'>>
   ): Promise<IClinic> {
-    return await fetchJson<IClinic>(`/api/clinics/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    const url = `/api/clinics/${id}`;
+    return await offlineClient.put<IClinic>(STORE_NAMES.CLINICS, id, url, data);
   },
 
   /**
    * Add a single diagnosis to a clinic
    */
   async addDiagnosis(clinicId: string, name: string) {
-    return await fetchJson(`/api/clinics/${clinicId}/common-diagnoses`, {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    });
+    const url = `/api/clinics/${clinicId}/common-diagnoses`;
+    // This is a sub-resource. Queueing this requires more complex logic to
+    // ensure the clinic itself is updated. For now, we queue it as a POST.
+    return await offlineClient.post(STORE_NAMES.CLINICS, url, { name });
   },
 
   /**
    * Add multiple diagnoses to a clinic
    */
   async addBulkDiagnoses(clinicId: string, names: string[]) {
-    return await fetchJson(`/api/clinics/${clinicId}/common-diagnoses/bulk`, {
-      method: 'POST',
-      body: JSON.stringify({ names }),
-    });
+    const url = `/api/clinics/${clinicId}/common-diagnoses/bulk`;
+    return await offlineClient.post(STORE_NAMES.CLINICS, url, { names });
   },
 
   /**
    * Delete a diagnosis from a clinic
    */
   async deleteDiagnosis(clinicId: string, diagnosisId: string) {
-    return await fetchJson(`/api/clinics/${clinicId}/common-diagnoses/${diagnosisId}`, {
-      method: 'DELETE',
-    });
+    const url = `/api/clinics/${clinicId}/common-diagnoses/${diagnosisId}`;
+    // Deleting a sub-resource. Queueing this is complex.
+    return await offlineClient.delete(STORE_NAMES.CLINICS, `${clinicId}-${diagnosisId}`, url);
   },
 
   /**
    * Add a single treatment to a clinic
    */
   async addTreatment(clinicId: string, name: string) {
-    return await fetchJson(`/api/clinics/${clinicId}/common-treatments`, {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    });
+    const url = `/api/clinics/${clinicId}/common-treatments`;
+    return await offlineClient.post(STORE_NAMES.CLINICS, url, { name });
   },
 
   /**
    * Add multiple treatments to a clinic
    */
   async addBulkTreatments(clinicId: string, names: string[]) {
-    return await fetchJson(`/api/clinics/${clinicId}/common-treatments/bulk`, {
-      method: 'POST',
-      body: JSON.stringify({ names }),
-    });
+    const url = `/api/clinics/${clinicId}/common-treatments/bulk`;
+    return await offlineClient.post(STORE_NAMES.CLINICS, url, { names });
   },
 
   /**
    * Delete a treatment from a clinic
    */
   async deleteTreatment(clinicId: string, treatmentId: string) {
-    return await fetchJson(`/api/clinics/${clinicId}/common-treatments/${treatmentId}`, {
-      method: 'DELETE',
-    });
+    const url = `/api/clinics/${clinicId}/common-treatments/${treatmentId}`;
+    return await offlineClient.delete(STORE_NAMES.CLINICS, `${clinicId}-${treatmentId}`, url);
   },
 
   async createClinicVisit(clinicId: string, payload: { patientId: string; diagnoses: string[]; treatments: string[]; followUpImages?: string[], radiologyImages?: string[] }) {
-    const response = await fetch(`/api/clinics/${clinicId}/records`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create clinic visit');
-    }
-
-    return response.json();
+    const url = `/api/clinics/${clinicId}/records`;
+    // Clinic visits could be their own store. For now, we queue against the clinic.
+    return await offlineClient.post('clinic_visits', url, payload);
   },
 
   async getPatientTreatments(clinicId: string, patientId: string) {
-    return await fetchJson(`/api/clinics/${clinicId}/patients/${patientId}/treatments`);
+    const url = `/api/clinics/${clinicId}/patients/${patientId}/treatments`;
+    // This is read-only and specific, so direct fetch is acceptable. Caching could be added.
+    return await fetchJson(url);
   },
 
   async getPatientVisitHistory(clinicId: string, patientId: string): Promise<IClinicVisit[]> {
-    return await fetchJson(`/api/clinics/${clinicId}/patients/${patientId}/visits`);
+    const url = `/api/clinics/${clinicId}/patients/${patientId}/visits`;
+    // Use direct fetch for visit history as this should always be fresh data
+    // Caching was causing stale data issues
+    return await fetchJson(url);
   },
 
   async getClinicStats(clinicId: string): Promise<{ totalVisits: number; referredVisits: number }> {
-    return await fetchJson(`/api/clinics/${clinicId}/stats`);
+    const url = `/api/clinics/${clinicId}/stats`;
+    // Stats are volatile, so fetching directly is best.
+    return await fetchJson(url);
   }
 }; 

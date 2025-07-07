@@ -35,7 +35,7 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
   const fetchClinic = useCallback(async () => {
     setLoading(true);
     try {
-      const clinic = await clinicsClient.getClinicById(clinicId);
+      const clinic = await clinicsClient.getClinicById(clinicId, { forceRefresh: true });
       setClinic(clinic);
     } catch (error) {
       message.error('Failed to fetch clinic data.');
@@ -83,7 +83,7 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
     if (query) {
       setIsSearching(true);
       const result = await searchPatients(query);
-      setSearchedPatients(result.data);
+      setSearchedPatients(result);
       setIsSearching(false);
     } else {
       setSearchedPatients([]);
@@ -102,14 +102,14 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
 
     setIsSubmitting(true);
     try {
-        const existingDiagnosisNames = clinic?.commonDiagnoses.map(d => d.name) ?? [];
+        const existingDiagnosisNames = clinic?.commonDiagnoses?.map(d => d.name) ?? [];
         const newDiagnosisNames = selectedDiagnoses.filter(d => !existingDiagnosisNames.includes(d));
 
         if (newDiagnosisNames.length > 0) {
             await clinicsClient.addBulkDiagnoses(clinicId, newDiagnosisNames);
         }
 
-        const existingTreatmentNames = clinic?.commonTreatments.map(t => t.name) ?? [];
+        const existingTreatmentNames = clinic?.commonTreatments?.map(t => t.name) ?? [];
         const newTreatmentNames = selectedTreatments.filter(t => !existingTreatmentNames.includes(t));
 
         if (newTreatmentNames.length > 0) {
@@ -124,14 +124,16 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
             radiologyImages,
         });
         message.success("Visit saved successfully!");
+        // Fetch updated history before clearing selectedPatient
+        const history = await clinicsClient.getPatientVisitHistory(clinicId, selectedPatient);
+        setVisitHistory(history);
+        
         setSelectedPatient(null);
         setSelectedDiagnoses([]);
         setSelectedTreatments([]);
         setFollowUpImages([]);
         setRadiologyImages([]);
         setSearchedPatients([]);
-        const history = await clinicsClient.getPatientVisitHistory(clinicId, selectedPatient);
-        setVisitHistory(history);
         fetchClinic();
     } catch (error: any) {
         message.error(error.message || "Failed to save records.");
@@ -186,7 +188,7 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
             value={selectedDiagnoses}
             onChange={(values) => setSelectedDiagnoses(values)}
           >
-            {clinic?.commonDiagnoses.map((d) => (
+            {clinic?.commonDiagnoses?.map((d) => (
               <Select.Option key={d._id?.toString()} value={d.name}>
                 {d.name}
               </Select.Option>
@@ -223,7 +225,7 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
             value={selectedTreatments}
             onChange={(values) => setSelectedTreatments(values)}
           >
-            {clinic?.commonTreatments.map((t) => (
+            {clinic?.commonTreatments?.map((t) => (
               <Select.Option key={t._id?.toString()} value={t.name}>
                 {t.name}
               </Select.Option>
