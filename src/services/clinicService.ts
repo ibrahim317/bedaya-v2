@@ -1,6 +1,6 @@
 import Clinic from '@/models/main/Clinic';
 import ClinicVisit from '@/models/main/ClinicVisit';
-import { Referral } from '@/models/main/Referral';
+import { Patient } from '@/models/main/Patient';
 import { Types } from 'mongoose';
 
 interface CreateClinicVisitParams {
@@ -51,22 +51,39 @@ export const clinicService = {
   },
 
   async getClinicStats(clinicId: string) {
-    const checkupClinic = await Clinic.findOne({ name: 'Check-up' }).lean();
-    if (!checkupClinic) {
-      // Handle case where Check-up clinic is not found
-      // For now, let's assume it always exists.
-      // Or we can throw an error.
-      console.warn("Check-up clinic not found. Referred patient stats will be inaccurate.");
+    const clinic = await Clinic.findById(clinicId).lean();
+    if (!clinic) {
+      throw new Error("Clinic not found");
     }
-    
+
     const totalVisits = await ClinicVisit.countDocuments({
       clinicId: new Types.ObjectId(clinicId),
     });
 
-    const referredVisits = checkupClinic ? await Referral.countDocuments({
-      fromClinicId: checkupClinic._id,
-      toClinicId: new Types.ObjectId(clinicId),
-    }) : 0;
+    const referralFieldMap: { [key: string]: string } = {
+      'IM': 'IM',
+      'Cardio': 'cardio',
+      'Surgery': 'surgery',
+      'Ophthalmology': 'ophth',
+      'Obs & Gyn': 'obsAndGyn',
+      'Gynecology': 'gyn',
+      'ENT': 'ENT',
+      'Derma': 'derma',
+      'Ortho': 'ortho',
+      'Pharmacy': 'pharmacy',
+      'Dental': 'dental',
+      'Pediatrics': 'pediatric',
+      'Radiology': 'radiology',
+    };
+
+    const referralField = referralFieldMap[clinic.name];
+
+    let referredVisits = 0;
+    if (referralField) {
+      referredVisits = await Patient.countDocuments({
+        [`referral.${referralField}`]: true,
+      });
+    }
 
     return {
       totalVisits,
