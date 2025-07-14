@@ -1,4 +1,4 @@
- # Bedaya Authentication App
+ # Bedaya Authentication App 
 
 A Next.js app with Ant Design and NextAuth for authentication, using MongoDB with Mongoose.
 
