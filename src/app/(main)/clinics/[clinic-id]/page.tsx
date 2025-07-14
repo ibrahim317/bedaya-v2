@@ -6,6 +6,8 @@ import { searchPatients } from '@/clients/patientClient';
 import { IPatient } from '@/types/Patient';
 import ImageUploader from '@/app/(main)/patients/components/ImageUploader';
 import { IClinicVisit } from '@/types/ClinicVisit';
+import { drugsClient } from '@/clients/drugsClient';
+import { IDrugWithId } from '@/types/Drug';
 
 const { TabPane } = Tabs;
 
@@ -29,6 +31,7 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
   const [visitHistory, setVisitHistory] = useState<IClinicVisit[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [stats, setStats] = useState<{ totalVisits: number; referredVisits: number } | null>(null);
+  const [availableDrugs, setAvailableDrugs] = useState<IDrugWithId[]>([]);
 
   const clinicId = params['clinic-id'];
 
@@ -47,6 +50,19 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
   useEffect(() => {
     fetchClinic();
   }, [fetchClinic]);
+
+  useEffect(() => {
+    const fetchDrugs = async () => {
+      try {
+        const drugsData = await drugsClient.getDrugs(1, 10000, ''); // Fetch all drugs
+        const available = drugsData.drugs.filter(drug => drug.quantityByPills > 0);
+        setAvailableDrugs(available);
+      } catch (error) {
+        message.error('Failed to fetch available drugs.');
+      }
+    };
+    fetchDrugs();
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -223,11 +239,18 @@ const ClinicPage = ({ params }: ClinicPageProps) => {
             value={selectedTreatments}
             onChange={(values) => setSelectedTreatments(values)}
           >
-            {clinic?.commonTreatments.map((t) => (
-              <Select.Option key={t._id?.toString()} value={t.name}>
-                {t.name}
-              </Select.Option>
-            ))}
+            {[
+              ...(clinic?.commonTreatments.map((t) => (
+                <Select.Option key={t._id?.toString()} value={t.name}>
+                  {t.name}
+                </Select.Option>
+              )) || []),
+              ...availableDrugs.map((drug) => (
+                <Select.Option key={drug._id} value={drug.name}>
+                  {drug.name}
+                </Select.Option>
+              )),
+            ]}
           </Select>
         </Form.Item>
         <Form.Item>
