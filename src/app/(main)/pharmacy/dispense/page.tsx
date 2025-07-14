@@ -289,7 +289,8 @@ export default function DispenseTreatmentPage() {
       { title: "Drug Name", dataIndex: ["drug", "name"], key: "drugName" },
       { title: "Quantity", dataIndex: "quantity", key: "quantity" },
       { title: "Unit", dataIndex: "quantityType", key: "quantityType" },
-      { title: "Total Pills", dataIndex: "remaining", key: "remaining" },
+      { title: "Remaining Qty", dataIndex: "remainingQuantity", key: "remainingQuantity" },
+      { title: "Remaining Unit", dataIndex: "remainingUnit", key: "remainingUnit" },
     ];
 
     return (
@@ -422,9 +423,6 @@ export default function DispenseTreatmentPage() {
               <Form.Item
                 {...restField}
                 name={[name, "remainingQuantity"]}
-                rules={[
-                  { required: true, message: "Missing remaining quantity" },
-                ]}
                 label="Remaining Qty"
               >
                 <InputNumber
@@ -435,7 +433,6 @@ export default function DispenseTreatmentPage() {
               <Form.Item
                 {...restField}
                 name={[name, "remainingUnit"]}
-                rules={[{ required: true, message: "Missing remaining unit" }]}
                 label="Remaining Unit"
               >
                 <Select placeholder="Remaining Unit">
