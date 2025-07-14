@@ -19,7 +19,8 @@ export async function POST(request: Request) {
         !med.drug.expiryDate ||
         !med.quantity ||
         !med.quantityType ||
-        !med.remaining
+        !med.remainingQuantity ||
+        !med.remainingUnit
       ) {
         return NextResponse.json({ message: 'Invalid medication data provided' }, { status: 400 });
       }

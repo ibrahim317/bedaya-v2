@@ -20,14 +20,14 @@ export async function createDispensedMedication(
       if (!drug) {
         throw new Error(`Drug with barcode ${med.drug.barcode} not found`);
       }
-      if (drug.quantityByPills < med.remaining) {
+      if (drug.quantityByPills < med.quantity) {
         throw new Error(`Not enough stock for drug ${drug.name}`);
       }
-      drug.quantityByPills -= med.remaining;
+      drug.quantityByPills -= med.quantity;
       if (drug.dailyConsumption) {
-        drug.dailyConsumption[0] += med.remaining;
+        drug.dailyConsumption[0] += med.quantity;
       } else {
-        drug.dailyConsumption = [med.remaining];
+        drug.dailyConsumption = [med.quantity];
       }
       await drug.save();
     }
@@ -75,9 +75,16 @@ export async function updateDispensedMedication(
     for (const med of existingRecord.medications) {
       const drug = await Drug.findOne({ barcode: med.drug.barcode });
       if (drug) {
-        drug.quantityByPills += med.remaining;
-        if (drug.dailyConsumption && drug.dailyConsumption[0] >= med.remaining) {
-          drug.dailyConsumption[0] -= med.remaining;
+        let quantityInPills = med.remainingQuantity;
+        if (med.remainingUnit === 'boxes') {
+            quantityInPills = med.remainingQuantity * (drug.stripsPerBox || 1) * (drug.pillsPerStrip || 1);
+        } else if (med.remainingUnit === 'strips') {
+            quantityInPills = med.remainingQuantity * (drug.pillsPerStrip || 1);
+        }
+
+        drug.quantityByPills += quantityInPills;
+        if (drug.dailyConsumption && drug.dailyConsumption[0] >= quantityInPills) {
+          drug.dailyConsumption[0] -= quantityInPills;
         }
         await drug.save();
       }
@@ -89,14 +96,22 @@ export async function updateDispensedMedication(
       if (!drug) {
         throw new Error(`Drug with barcode ${med.drug.barcode} not found`);
       }
-      if (drug.quantityByPills < med.remaining) {
+
+      let quantityInPills = med.remainingQuantity;
+      if (med.remainingUnit === 'boxes') {
+          quantityInPills = med.remainingQuantity * (drug.stripsPerBox || 1) * (drug.pillsPerStrip || 1);
+      } else if (med.remainingUnit === 'strips') {
+          quantityInPills = med.remainingQuantity * (drug.pillsPerStrip || 1);
+      }
+
+      if (drug.quantityByPills < quantityInPills) {
         throw new Error(`Not enough stock for drug ${drug.name}`);
       }
-      drug.quantityByPills -= med.remaining;
+      drug.quantityByPills -= quantityInPills;
       if (drug.dailyConsumption) {
-        drug.dailyConsumption[0] += med.remaining;
+        drug.dailyConsumption[0] += quantityInPills;
       } else {
-        drug.dailyConsumption = [med.remaining];
+        drug.dailyConsumption = [quantityInPills];
       }
       await drug.save();
     }
@@ -130,9 +145,16 @@ export async function deleteDispensedMedication(id: string): Promise<void> {
     for (const med of record.medications) {
       const drug = await Drug.findOne({ barcode: med.drug.barcode });
       if (drug) {
-        drug.quantityByPills += med.remaining;
-        if (drug.dailyConsumption && drug.dailyConsumption[0] >= med.remaining) {
-          drug.dailyConsumption[0] -= med.remaining;
+        let quantityInPills = med.remainingQuantity;
+        if (med.remainingUnit === 'boxes') {
+            quantityInPills = med.remainingQuantity * (drug.stripsPerBox || 1) * (drug.pillsPerStrip || 1);
+        } else if (med.remainingUnit === 'strips') {
+            quantityInPills = med.remainingQuantity * (drug.pillsPerStrip || 1);
+        }
+
+        drug.quantityByPills += quantityInPills;
+        if (drug.dailyConsumption && drug.dailyConsumption[0] >= quantityInPills) {
+          drug.dailyConsumption[0] -= quantityInPills;
         }
         await drug.save();
       }

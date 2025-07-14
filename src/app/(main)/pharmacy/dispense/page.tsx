@@ -1,17 +1,36 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Form, Button, Select, InputNumber, Space, Card, Row, Col, Typography, message, Table, Modal, Popconfirm } from 'antd';
-import { PlusOutlined, MinusCircleOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useSession } from 'next-auth/react';
-import { searchPatients } from '@/clients/patientClient';
-import { drugsClient } from '@/clients/drugsClient';
-import { dispensedMedicationsClient } from '@/clients/dispensedMedicationsClient';
-import { IPatient } from '@/types/Patient';
-import { IDrugWithId } from '@/types/Drug';
-import { IPopulatedDispensedMedication } from '@/types/DispensedMedication';
-import type { ColumnsType } from 'antd/es/table';
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Form,
+  Button,
+  Select,
+  InputNumber,
+  Space,
+  Card,
+  Row,
+  Col,
+  Typography,
+  message,
+  Table,
+  Modal,
+  Popconfirm,
+} from "antd";
+import {
+  PlusOutlined,
+  MinusCircleOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
+import { useSession } from "next-auth/react";
+import { searchPatients } from "@/clients/patientClient";
+import { drugsClient } from "@/clients/drugsClient";
+import { dispensedMedicationsClient } from "@/clients/dispensedMedicationsClient";
+import { IPatient } from "@/types/Patient";
+import { IDrugWithId } from "@/types/Drug";
+import { IPopulatedDispensedMedication } from "@/types/DispensedMedication";
+import type { ColumnsType } from "antd/es/table";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -25,11 +44,16 @@ export default function DispenseTreatmentPage() {
   const [patients, setPatients] = useState<IPatient[]>([]);
   const [drugs, setDrugs] = useState<IDrugWithId[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [dispensedMedications, setDispensedMedications] = useState<IPopulatedDispensedMedication[]>([]);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
+    null
+  );
+  const [dispensedMedications, setDispensedMedications] = useState<
+    IPopulatedDispensedMedication[]
+  >([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [currentEditRecord, setCurrentEditRecord] = useState<IPopulatedDispensedMedication | null>(null);
+  const [currentEditRecord, setCurrentEditRecord] =
+    useState<IPopulatedDispensedMedication | null>(null);
   const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
@@ -37,13 +61,13 @@ export default function DispenseTreatmentPage() {
       try {
         setLoading(true);
         const [patientData, drugData] = await Promise.all([
-          searchPatients(''),
-          drugsClient.getDrugs(1, 10000, '')
+          searchPatients(""),
+          drugsClient.getDrugs(1, 10000, ""),
         ]);
         setPatients(patientData.data);
         setDrugs(drugData.drugs);
       } catch (error) {
-        message.error('Failed to load data');
+        message.error("Failed to load data");
       } finally {
         setLoading(false);
       }
@@ -52,7 +76,7 @@ export default function DispenseTreatmentPage() {
   }, []);
 
   useEffect(() => {
-    const patientIdFromUrl = searchParams.get('patientId');
+    const patientIdFromUrl = searchParams.get("patientId");
     if (patientIdFromUrl && patients.length > 0) {
       form.setFieldsValue({ patientId: patientIdFromUrl });
       handlePatientChange(patientIdFromUrl);
@@ -62,18 +86,11 @@ export default function DispenseTreatmentPage() {
   const onFinish = async (values: any) => {
     try {
       const processedMedications = values.medications.map((med: any) => {
-        const selectedDrug = drugs.find(d => d._id === med.drug);
+        const selectedDrug = drugs.find((d) => d._id === med.drug);
         if (!selectedDrug) {
-          throw new Error('Selected drug not found');
+          throw new Error("Selected drug not found");
         }
 
-        let remainingInPills = med.quantity;
-        if (med.unit === 'boxes') {
-          remainingInPills = med.quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
-        } else if (med.unit === 'strips') {
-          remainingInPills = med.quantity * (selectedDrug.pillsPerStrip || 1);
-        }
-        
         return {
           drug: {
             name: selectedDrug.name,
@@ -82,7 +99,8 @@ export default function DispenseTreatmentPage() {
           },
           quantity: med.quantity,
           quantityType: med.unit,
-          remaining: remainingInPills,
+          remainingQuantity: med.remainingQuantity,
+          remainingUnit: med.remainingUnit,
         };
       });
 
@@ -90,12 +108,14 @@ export default function DispenseTreatmentPage() {
         patientId: values.patientId,
         medications: processedMedications,
       };
-      
+
       await dispensedMedicationsClient.create(submissionData);
-      message.success('Treatment dispensed successfully!');
-      router.push('/pharmacy/dispense');
+      message.success("Treatment dispensed successfully!");
+      router.push("/pharmacy/dispense");
     } catch (error) {
-      message.error(error instanceof Error ? error.message : 'Failed to dispense treatment');
+      message.error(
+        error instanceof Error ? error.message : "Failed to dispense treatment"
+      );
     }
   };
 
@@ -116,10 +136,13 @@ export default function DispenseTreatmentPage() {
     }
   };
 
-  const handleDrugChange = (formInstance: typeof form | typeof editForm, fieldKey: number) => {
-    const medications = formInstance.getFieldValue('medications');
+  const handleDrugChange = (
+    formInstance: typeof form | typeof editForm,
+    fieldKey: number
+  ) => {
+    const medications = formInstance.getFieldValue("medications");
     if (medications[fieldKey]) {
-      medications[fieldKey].unit = 'pills';
+      medications[fieldKey].unit = "pills";
       formInstance.setFieldsValue({ medications });
     }
   };
@@ -128,7 +151,9 @@ export default function DispenseTreatmentPage() {
     if (selectedPatientId) {
       try {
         setHistoryLoading(true);
-        const data = await dispensedMedicationsClient.getByPatientId(selectedPatientId);
+        const data = await dispensedMedicationsClient.getByPatientId(
+          selectedPatientId
+        );
         setDispensedMedications(data);
       } catch (error) {
         message.error("Failed to refresh patient's medication history");
@@ -140,19 +165,19 @@ export default function DispenseTreatmentPage() {
 
   const handleEdit = (record: IPopulatedDispensedMedication) => {
     setCurrentEditRecord(record);
-    
+
     const initialValues = {
       patientId: record.patientId,
-      medications: record.medications.map(med => {
-        const drugInState = drugs.find(d => d.barcode === med.drug.barcode);
+      medications: record.medications.map((med) => {
+        const drugInState = drugs.find((d) => d.barcode === med.drug.barcode);
         return {
           drug: drugInState?._id,
           quantity: med.quantity,
-          unit: med.quantityType
+          unit: med.quantityType,
         };
-      })
+      }),
     };
-    
+
     editForm.setFieldsValue(initialValues);
     setIsEditModalVisible(true);
   };
@@ -161,10 +186,10 @@ export default function DispenseTreatmentPage() {
     try {
       setHistoryLoading(true);
       await dispensedMedicationsClient.delete(String(recordId));
-      message.success('Medication record deleted successfully');
+      message.success("Medication record deleted successfully");
       await refreshMedicationHistory();
     } catch (error) {
-      message.error('Failed to delete medication record');
+      message.error("Failed to delete medication record");
     } finally {
       setHistoryLoading(false);
     }
@@ -172,22 +197,15 @@ export default function DispenseTreatmentPage() {
 
   const handleEditSubmit = async () => {
     if (!currentEditRecord?._id) return;
-    
+
     try {
       setEditLoading(true);
       const values = await editForm.validateFields();
-      
+
       const processedMedications = values.medications.map((med: any) => {
-        const selectedDrug = drugs.find(d => d._id === med.drug);
+        const selectedDrug = drugs.find((d) => d._id === med.drug);
         if (!selectedDrug) {
-          throw new Error('Selected drug not found');
-        }
-        
-        let remainingInPills = med.quantity;
-        if (med.unit === 'boxes') {
-          remainingInPills = med.quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
-        } else if (med.unit === 'strips') {
-          remainingInPills = med.quantity * (selectedDrug.pillsPerStrip || 1);
+          throw new Error("Selected drug not found");
         }
 
         return {
@@ -198,7 +216,8 @@ export default function DispenseTreatmentPage() {
           },
           quantity: med.quantity,
           quantityType: med.unit,
-          remaining: remainingInPills,
+          remainingQuantity: med.remainingQuantity,
+          remainingUnit: med.remainingUnit,
         };
       });
 
@@ -206,13 +225,20 @@ export default function DispenseTreatmentPage() {
         patientId: values.patientId,
         medications: processedMedications,
       };
-      
-      await dispensedMedicationsClient.update(String(currentEditRecord._id), submissionData);
-      message.success('Medication record updated successfully');
+
+      await dispensedMedicationsClient.update(
+        String(currentEditRecord._id),
+        submissionData
+      );
+      message.success("Medication record updated successfully");
       setIsEditModalVisible(false);
       await refreshMedicationHistory();
     } catch (error) {
-      message.error(error instanceof Error ? error.message : 'Failed to update medication record');
+      message.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update medication record"
+      );
     } finally {
       setEditLoading(false);
     }
@@ -220,20 +246,20 @@ export default function DispenseTreatmentPage() {
 
   const medicationHistoryColumns: ColumnsType<IPopulatedDispensedMedication> = [
     {
-      title: 'Date Dispensed',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (text) => new Date(text).toLocaleDateString('en-GB'),
+      title: "Date Dispensed",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (text) => new Date(text).toLocaleDateString("en-GB"),
     },
     {
-      title: 'Number of Medications',
-      dataIndex: 'medications',
-      key: 'medicationCount',
+      title: "Number of Medications",
+      dataIndex: "medications",
+      key: "medicationCount",
       render: (medications) => medications.length,
     },
     {
-      title: 'Actions',
-      key: 'actions',
+      title: "Actions",
+      key: "actions",
       render: (_, record) => (
         <Space size="middle">
           <Button
@@ -249,11 +275,7 @@ export default function DispenseTreatmentPage() {
             okText="Yes"
             cancelText="No"
           >
-            <Button
-              danger
-              icon={<DeleteOutlined />}
-              size="small"
-            >
+            <Button danger icon={<DeleteOutlined />} size="small">
               Delete
             </Button>
           </Popconfirm>
@@ -264,42 +286,64 @@ export default function DispenseTreatmentPage() {
 
   const expandedRowRender = (record: IPopulatedDispensedMedication) => {
     const columns: ColumnsType<(typeof record.medications)[0]> = [
-      { title: 'Drug Name', dataIndex: ['drug', 'name'], key: 'drugName' },
-      { title: 'Quantity', dataIndex: 'quantity', key: 'quantity' },
-      { title: 'Unit', dataIndex: 'quantityType', key: 'quantityType' },
-      { title: 'Total Pills', dataIndex: 'remaining', key: 'remaining' },
+      { title: "Drug Name", dataIndex: ["drug", "name"], key: "drugName" },
+      { title: "Quantity", dataIndex: "quantity", key: "quantity" },
+      { title: "Unit", dataIndex: "quantityType", key: "quantityType" },
+      { title: "Total Pills", dataIndex: "remaining", key: "remaining" },
     ];
 
-    return <Table columns={columns} dataSource={record.medications} pagination={false} rowKey={(med) => med.drug.barcode} />;
+    return (
+      <Table
+        columns={columns}
+        dataSource={record.medications}
+        pagination={false}
+        rowKey={(med) => med.drug.barcode}
+      />
+    );
   };
 
   const calculateTotalPills = (medication: any, allDrugs: IDrugWithId[]) => {
-    if (!medication || !medication.drug || !medication.unit || !medication.quantity) {
+    if (
+      !medication ||
+      !medication.drug ||
+      !medication.unit ||
+      !medication.quantity
+    ) {
       return 0;
     }
-    const selectedDrug = allDrugs.find(d => d._id === medication.drug);
+    const selectedDrug = allDrugs.find((d) => d._id === medication.drug);
     if (!selectedDrug) return 0;
 
     let totalPills = medication.quantity;
-    if (medication.unit === 'boxes') {
-      totalPills = medication.quantity * (selectedDrug.stripsPerBox || 1) * (selectedDrug.pillsPerStrip || 1);
-    } else if (medication.unit === 'strips') {
+    if (medication.unit === "boxes") {
+      totalPills =
+        medication.quantity *
+        (selectedDrug.stripsPerBox || 1) *
+        (selectedDrug.pillsPerStrip || 1);
+    } else if (medication.unit === "strips") {
       totalPills = medication.quantity * (selectedDrug.pillsPerStrip || 1);
     }
     return totalPills;
-  }
+  };
 
-  const renderMedicationFormList = (formInstance: typeof form | typeof editForm) => (
+  const renderMedicationFormList = (
+    formInstance: typeof form | typeof editForm
+  ) => (
     <Form.List name="medications">
       {(fields, { add, remove }) => (
         <>
           {fields.map(({ key, name, ...restField }) => (
-            <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+            <Space
+              key={key}
+              style={{ display: "flex", marginBottom: 8 }}
+              align="center"
+            >
               <Form.Item
                 {...restField}
-                name={[name, 'drug']}
-                rules={[{ required: true, message: 'Missing drug' }]}
-                style={{ minWidth: '300px' }}
+                name={[name, "drug"]}
+                rules={[{ required: true, message: "Missing drug" }]}
+                style={{ minWidth: "300px" }}
+                label="Drug"
               >
                 <Select
                   showSearch
@@ -307,12 +351,20 @@ export default function DispenseTreatmentPage() {
                   optionFilterProp="children"
                   loading={loading}
                   filterOption={(input, option) =>
-                    (option?.label ? String(option.label).toLowerCase().includes(input.toLowerCase()) : false)
+                    option?.label
+                      ? String(option.label)
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      : false
                   }
                   onChange={() => handleDrugChange(formInstance, key)}
                 >
-                  {drugs.map(d => (
-                    <Option key={d._id as string} value={d._id as string} label={`${d.name} (${d.barcode})`}>
+                  {drugs.map((d) => (
+                    <Option
+                      key={d._id as string}
+                      value={d._id as string}
+                      label={`${d.name} (${d.barcode})`}
+                    >
                       {d.name} ({d.barcode})
                     </Option>
                   ))}
@@ -320,8 +372,9 @@ export default function DispenseTreatmentPage() {
               </Form.Item>
               <Form.Item
                 {...restField}
-                name={[name, 'quantity']}
-                rules={[{ required: true, message: 'Missing quantity' }]}
+                name={[name, "quantity"]}
+                rules={[{ required: true, message: "Missing quantity" }]}
+                label="Quantity"
               >
                 <InputNumber min={1} placeholder="Quantity" />
               </Form.Item>
@@ -329,28 +382,32 @@ export default function DispenseTreatmentPage() {
               <Form.Item
                 noStyle
                 shouldUpdate={(prevValues, currentValues) =>
-                  prevValues.medications?.[name]?.drug !== currentValues.medications?.[name]?.drug
+                  prevValues.medications?.[name]?.drug !==
+                  currentValues.medications?.[name]?.drug
                 }
               >
                 {({ getFieldValue }) => {
-                  const drugId = getFieldValue(['medications', name, 'drug']);
-                  const selectedDrug = drugs.find(d => d._id === drugId);
-                  
+                  const drugId = getFieldValue(["medications", name, "drug"]);
+                  const selectedDrug = drugs.find((d) => d._id === drugId);
+
                   if (!selectedDrug) return null;
 
-                  const hasStrips = selectedDrug.pillsPerStrip && selectedDrug.pillsPerStrip > 1;
-                  const hasBoxes = selectedDrug.stripsPerBox && selectedDrug.stripsPerBox > 1;
+                  const hasStrips =
+                    selectedDrug.pillsPerStrip &&
+                    selectedDrug.pillsPerStrip > 1;
+                  const hasBoxes =
+                    selectedDrug.stripsPerBox && selectedDrug.stripsPerBox > 1;
 
                   if (!hasStrips && !hasBoxes) {
-                    return <div style={{width: 100}}/>;
+                    return <div style={{ width: 100 }} />;
                   }
 
                   return (
                     <Form.Item
                       {...restField}
-                      name={[name, 'unit']}
+                      name={[name, "unit"]}
                       initialValue="pills"
-                      noStyle
+                      label="Unit"
                     >
                       <Select style={{ width: 100 }}>
                         <Option value="pills">Pill</Option>
@@ -363,23 +420,40 @@ export default function DispenseTreatmentPage() {
               </Form.Item>
 
               <Form.Item
-                label="Remains (Pills)"
-                shouldUpdate={(prevValues, currentValues) =>
-                  prevValues.medications?.[name] !== currentValues.medications?.[name]
-                }
+                {...restField}
+                name={[name, "remainingQuantity"]}
+                rules={[
+                  { required: true, message: "Missing remaining quantity" },
+                ]}
+                label="Remaining Qty"
               >
-                {({ getFieldValue }) => {
-                  const medication = getFieldValue(['medications', name]);
-                  const totalPills = calculateTotalPills(medication, drugs);
-                  return <InputNumber value={totalPills} disabled />;
-                }}
+                <InputNumber
+                  placeholder="Remaining Qty"
+                  style={{ width: "100%" }}
+                />
               </Form.Item>
-              
+              <Form.Item
+                {...restField}
+                name={[name, "remainingUnit"]}
+                rules={[{ required: true, message: "Missing remaining unit" }]}
+                label="Remaining Unit"
+              >
+                <Select placeholder="Remaining Unit">
+                  <Option value="pills">Pills</Option>
+                  <Option value="strips">Strips</Option>
+                  <Option value="boxes">Boxes</Option>
+                </Select>
+              </Form.Item>
               <MinusCircleOutlined onClick={() => remove(name)} />
             </Space>
           ))}
           <Form.Item>
-            <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+            <Button
+              type="dashed"
+              onClick={() => add()}
+              block
+              icon={<PlusOutlined />}
+            >
               Add Drug
             </Button>
           </Form.Item>
@@ -391,7 +465,9 @@ export default function DispenseTreatmentPage() {
   return (
     <div className="p-6">
       <Card>
-        <Title level={2} className="mb-6">Dispense Patient Treatment</Title>
+        <Title level={2} className="mb-6">
+          Dispense Patient Treatment
+        </Title>
         <Form
           form={form}
           name="dispense_treatment"
@@ -402,7 +478,7 @@ export default function DispenseTreatmentPage() {
           <Form.Item
             name="patientId"
             label="Patient"
-            rules={[{ required: true, message: 'Please select a patient!' }]}
+            rules={[{ required: true, message: "Please select a patient!" }]}
           >
             <Select
               showSearch
@@ -411,18 +487,28 @@ export default function DispenseTreatmentPage() {
               loading={loading}
               onChange={handlePatientChange}
               filterOption={(input, option) =>
-                (option?.label ? String(option.label).toLowerCase().includes(input.toLowerCase()) : false)
+                option?.label
+                  ? String(option.label)
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  : false
               }
             >
-              {patients.map(p => (
-                <Option key={p._id as string} value={p._id as string} label={`${p.code} - ${p.name}`}>
+              {patients.map((p) => (
+                <Option
+                  key={p._id as string}
+                  value={p._id as string}
+                  label={`${p.code} - ${p.name}`}
+                >
                   {p.code} - {p.name}
                 </Option>
               ))}
             </Select>
           </Form.Item>
 
-          <Title level={4} className="mt-8">Medications</Title>
+          <Title level={4} className="mt-8">
+            Medications
+          </Title>
 
           {renderMedicationFormList(form)}
 
@@ -431,17 +517,22 @@ export default function DispenseTreatmentPage() {
               <Button type="primary" htmlType="submit">
                 Dispense Treatment
               </Button>
-              <Button htmlType="button" onClick={() => router.push('/pharmacy')}>
+              <Button
+                htmlType="button"
+                onClick={() => router.push("/pharmacy")}
+              >
                 Cancel
               </Button>
             </Space>
           </Form.Item>
         </Form>
       </Card>
-      
+
       {selectedPatientId && (
         <Card className="mt-6">
-          <Title level={3} className="mb-4">Patient Medication History</Title>
+          <Title level={3} className="mb-4">
+            Patient Medication History
+          </Title>
           <Table
             columns={medicationHistoryColumns}
             dataSource={dispensedMedications}
@@ -480,7 +571,7 @@ export default function DispenseTreatmentPage() {
           <Form.Item
             name="patientId"
             label="Patient"
-            rules={[{ required: true, message: 'Please select a patient!' }]}
+            rules={[{ required: true, message: "Please select a patient!" }]}
           >
             <Select
               disabled={true}
@@ -488,11 +579,19 @@ export default function DispenseTreatmentPage() {
               placeholder="Select a patient"
               optionFilterProp="children"
               filterOption={(input, option) =>
-                (option?.label ? String(option.label).toLowerCase().includes(input.toLowerCase()) : false)
+                option?.label
+                  ? String(option.label)
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  : false
               }
             >
-              {patients.map(p => (
-                <Option key={p._id as string} value={p._id as string} label={`${p.code} - ${p.name}`}>
+              {patients.map((p) => (
+                <Option
+                  key={p._id as string}
+                  value={p._id as string}
+                  label={`${p.code} - ${p.name}`}
+                >
                   {p.code} - {p.name}
                 </Option>
               ))}
@@ -504,4 +603,4 @@ export default function DispenseTreatmentPage() {
       </Modal>
     </div>
   );
-} 
+}

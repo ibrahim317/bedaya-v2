@@ -11,7 +11,8 @@ export interface IDispensedMedication extends Document {
     };
     quantity: number;
     quantityType: 'pills' | 'strips' | 'boxes';
-    remaining: number;
+    remainingQuantity: number;
+    remainingUnit: 'pills' | 'strips' | 'boxes';
   }[];
   createdAt: Date | string;
   updatedAt: Date | string;
@@ -32,7 +33,8 @@ export interface IPopulatedDispensedMedication extends Omit<IDispensedMedication
     };
     quantity: number;
     quantityType: 'pills' | 'strips' | 'boxes';
-    remaining: number;
+    remainingQuantity: number;
+    remainingUnit: 'pills' | 'strips' | 'boxes';
   }[];
 }
 
@@ -46,6 +48,7 @@ export type DispensedMedicationData = {
       };
       quantity: number;
       quantityType: 'pills' | 'strips' | 'boxes';
-      remaining: number;
+      remainingQuantity: number;
+      remainingUnit: 'pills' | 'strips' | 'boxes';
     }[];
 }

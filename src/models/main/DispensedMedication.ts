@@ -17,7 +17,8 @@ const DispensedMedicationSchema: Schema<IDispensedMedication> = new Schema({
     },
     quantity: { type: Number, required: true },
     quantityType: { type: String, required: true, enum: ['pills', 'strips', 'boxes'] },
-    remaining: { type: Number, default: 0 },
+    remainingQuantity: { type: Number, default: 0 },
+    remainingUnit: { type: String, required: true, enum: ['pills', 'strips', 'boxes'] },
   }],
 }, { timestamps: true });
 
