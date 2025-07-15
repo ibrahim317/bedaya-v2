@@ -12,6 +12,7 @@ import {
   Card,
   App,
   Divider,
+  Radio,
 } from "antd";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
@@ -74,9 +75,11 @@ const BloodLabPage = () => {
       return;
     }
 
+    const { checkedOutBlood, ...results } = values;
+
     const allItems = [...cbcItems, esrItem, ...lipidProfileItems];
 
-    const labTestResults: PatientLabTestResult[] = Object.keys(values).map(
+    const labTestResults: PatientLabTestResult[] = Object.keys(results).map(
       (key) => {
         const item = allItems.find((i) => i.name === key);
         return {
@@ -89,13 +92,18 @@ const BloodLabPage = () => {
     );
 
     try {
+      console.log("labTestResults", labTestResults);
       await updateLabTest(String(patient._id), {
         labTestName: "Blood",
+        status:
+          checkedOutBlood === "Yes"
+            ? PatientLabTestStatus.CheckedOut : PatientLabTestStatus.CheckedIn,
         results: labTestResults,
       });
       message.success("Blood lab test submitted successfully!");
       router.push("/labs");
     } catch (error) {
+      console.log("error", error);
       message.error("Failed to submit lab test.");
     }
   };
@@ -182,6 +190,14 @@ const BloodLabPage = () => {
             </Panel>
             <Panel header="Lipid Profile" key="3">
               {lipidProfileItems.map(renderTestItem)}
+            </Panel>
+            <Panel header="Checked Out" key="4">
+              <Form.Item name="checkedOutBlood" label="Checked Out">
+                <Radio.Group>
+                  <Radio value="Yes">Yes</Radio>
+                  <Radio value="No">No</Radio>
+                </Radio.Group>
+              </Form.Item>
             </Panel>
           </Collapse>
 

@@ -97,6 +97,26 @@ const ExaminationAndScreeningSection = () => {
                 </Form.Item>
               </Col>
             </Row>
+            <Row gutter={[16, 16]}>
+              <Col xs={24}>
+                <Form.Item
+                  name={["screening", "knownDiabetic"]}
+                  valuePropName="checked"
+                >
+                  <Checkbox>Known diabetic</Checkbox>
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={[16, 16]}>
+              <Col xs={24}>
+                <Form.Item
+                  name={["screening", "nonDiabetic"]}
+                  valuePropName="checked"
+                >
+                  <Checkbox>Non diabetic</Checkbox>
+                </Form.Item>
+              </Col>
+            </Row>
           </Card>
         </Col>
       </Row>

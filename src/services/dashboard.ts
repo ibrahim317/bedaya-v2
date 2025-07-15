@@ -145,27 +145,57 @@ export async function getDashboardStats() {
     return acc;
   }, {});
 
-  const labPatients = await Patient.find({ labTest: { $exists: true, $ne: [] } });
-  let labTotalIn = 0;
-  let labTotalOut = 0;
-
-  for (const patient of labPatients) {
-    if (patient.labTest && patient.labTest.length > 0) {
-      const isOut = patient.labTest.every(
-        (lt) => lt.status === PatientLabTestStatus.CheckedOut
-      );
-      if (isOut) {
-        labTotalOut++;
-      } else {
-        const isIn = patient.labTest.some(
-          (lt) => lt.status === PatientLabTestStatus.CheckedIn
-        );
-        if (isIn) {
-          labTotalIn++;
+  const labTotalsResult = await Patient.aggregate([
+    {
+      $addFields: {
+        overAllLabsStatus: {
+          $ifNull: ["$overAllLabsStatus", "Not Requested"]
         }
       }
+    },
+    {
+      $group: {
+        _id: {
+          type: "$type",
+          status: "$overAllLabsStatus",
+        },
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $group: {
+        _id: "$_id.type",
+        statuses: {
+          $push: {
+            status: "$_id.status",
+            count: "$count",
+          },
+        },
+      },
+    },
+  ]);
+
+  const labTotals = {
+    [PatientType.Adult]: { labTotalIn: 0, labTotalOut: 0, labTotalNotRequested: 0 },
+    [PatientType.Child]: { labTotalIn: 0, labTotalOut: 0, labTotalNotRequested: 0 },
+  };
+
+  labTotalsResult.forEach(item => {
+    const patientType = item._id;
+    const target = labTotals[patientType as PatientType];
+    if (target) {
+      item.statuses.forEach((s: { status: PatientLabTestStatus; count: number }) => {
+        if (s.status === PatientLabTestStatus.CheckedIn) {
+          target.labTotalIn = s.count;
+        } else if (s.status === PatientLabTestStatus.CheckedOut) {
+          target.labTotalOut = s.count;
+        } else {
+          target.labTotalNotRequested = s.count;
+        }
+      });
     }
-  }
+  });
+
 
   return {
     patientCount,
@@ -178,7 +208,6 @@ export async function getDashboardStats() {
     adultPatientCount,
     childPatientCount,
     labTestStats,
-    labTotalIn,
-    labTotalOut,
+    labTotals,
   };
 } 

@@ -9,6 +9,8 @@ export interface IDrug {
   sample: boolean;
   expiryDate: Date | string;
   dailyConsumption?:number[];  // count of drugs consumed par day
+  quantityByBoxes?: number;
+  dailyConsumptionByBoxes?: number[];
 
  // Timestamps
   createdAt?: string | Date;

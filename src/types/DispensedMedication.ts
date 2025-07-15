@@ -3,6 +3,7 @@ import { IDrugWithId } from './Drug';
 
 export interface IDispensedMedication extends Document {
   patientId: ObjectId;
+  patientName: string;
   medications: {
     drug: {
       name: string;

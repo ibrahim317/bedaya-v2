@@ -1,11 +1,13 @@
-import Clinic from '@/models/main/Clinic';
-import ClinicVisit from '@/models/main/ClinicVisit';
-import { Patient } from '@/models/main/Patient';
-import { Types } from 'mongoose';
+import Clinic from "@/models/main/Clinic";
+import ClinicVisit from "@/models/main/ClinicVisit";
+import { Patient } from "@/models/main/Patient";
+import { Types } from "mongoose";
 
 interface CreateClinicVisitParams {
   patientId: string | Types.ObjectId;
   clinicId: string | Types.ObjectId;
+  patientName: string;
+  clinicName: string;
   diagnoses: string[];
   treatments: string[];
   followUpImages?: string[];
@@ -13,10 +15,21 @@ interface CreateClinicVisitParams {
 }
 
 export const clinicService = {
-  async createClinicVisit({ patientId, clinicId, diagnoses, treatments, followUpImages, radiologyImages }: CreateClinicVisitParams) {
+  async createClinicVisit({
+    patientId,
+    clinicId,
+    patientName,
+    clinicName,
+    diagnoses,
+    treatments,
+    followUpImages,
+    radiologyImages,
+  }: CreateClinicVisitParams) {
     await ClinicVisit.create({
       patientId,
       clinicId,
+      patientName,
+      clinicName,
       diagnoses,
       treatments,
       followUpImages: followUpImages || [],
@@ -30,10 +43,12 @@ export const clinicService = {
     const visits = await ClinicVisit.find({
       clinicId: new Types.ObjectId(clinicId),
       patientId: new Types.ObjectId(patientId),
-    }).sort({ createdAt: -1 }).lean();
+    })
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const treatments = visits.flatMap(visit =>
-      (visit.treatments || []).map(treatmentName => ({
+    const treatments = visits.flatMap((visit) =>
+      (visit.treatments || []).map((treatmentName) => ({
         _id: `${visit._id}-${treatmentName}`, // Create a unique key
         treatmentName,
         createdAt: visit.createdAt,
@@ -46,7 +61,9 @@ export const clinicService = {
     const visits = await ClinicVisit.find({
       clinicId: new Types.ObjectId(clinicId),
       patientId: new Types.ObjectId(patientId),
-    }).sort({ createdAt: -1 }).lean();
+    })
+      .sort({ createdAt: -1 })
+      .lean();
     return visits;
   },
 
@@ -61,19 +78,19 @@ export const clinicService = {
     });
 
     const referralFieldMap: { [key: string]: string } = {
-      'IM': 'IM',
-      'Cardio': 'cardio',
-      'Surgery': 'surgery',
-      'Ophthalmology': 'ophth',
-      'Obs & Gyn': 'obsAndGyn',
-      'Gynecology': 'gyn',
-      'ENT': 'ENT',
-      'Derma': 'derma',
-      'Ortho': 'ortho',
-      'Pharmacy': 'pharmacy',
-      'Dental': 'dental',
-      'Pediatrics': 'pediatric',
-      'Radiology': 'radiology',
+      IM: "IM",
+      Cardio: "cardio",
+      Surgery: "surgery",
+      Ophthalmology: "ophth",
+      "Obs & Gyn": "obsAndGyn",
+      Gynecology: "gyn",
+      ENT: "ENT",
+      Derma: "derma",
+      Ortho: "ortho",
+      Pharmacy: "pharmacy",
+      Dental: "dental",
+      Pediatrics: "pediatric",
+      Radiology: "radiology",
     };
 
     const referralField = referralFieldMap[clinic.name];
@@ -89,5 +106,5 @@ export const clinicService = {
       totalVisits,
       referredVisits,
     };
-  }
-}; 
+  },
+};

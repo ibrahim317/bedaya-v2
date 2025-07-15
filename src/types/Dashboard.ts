@@ -25,6 +25,11 @@ export interface DashboardStats {
       };
     };
   };
-  labTotalIn: number;
-  labTotalOut: number;
-} 
+  labTotals: {
+    [patientType: string]: {
+      labTotalIn: number;
+      labTotalOut: number;
+      labTotalNotRequested: number;
+    };
+  };
+}

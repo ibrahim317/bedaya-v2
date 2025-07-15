@@ -10,6 +10,40 @@ const DrugSchema: Schema<IDrug> = new Schema({
   sample: { type: Boolean, required: true ,default: false },
   expiryDate: { type: Date, required: true },
   dailyConsumption: { type: [Number], required: false, default: [0, 0, 0, 0, 0] },
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true, getters: true },
+  toObject: { virtuals: true, getters: true },
+});
+
+DrugSchema.set('toObject', { virtuals: true, getters: true });
+DrugSchema.set('toJSON', { virtuals: true, getters: true });
+
+
+DrugSchema.virtual('quantityByBoxes', {
+  c_type: 'Number',
+  c_dependencies: ['quantityByPills', 'stripsPerBox', 'pillsPerStrip'],
+}).get(function(this: IDrug) {
+  const pillsPerBox = this.stripsPerBox * this.pillsPerStrip;
+  if (pillsPerBox > 0) {
+    return Math.ceil(this.quantityByPills / pillsPerBox);
+  }
+  return 0;
+});
+
+DrugSchema.virtual('dailyConsumptionByBoxes', {
+  c_type: 'Array',
+  c_dependencies: ['dailyConsumption', 'stripsPerBox', 'pillsPerStrip'],
+}).get(function(this: IDrug) {
+  if (!this.dailyConsumption) return [];
+
+  const pillsPerBox = this.stripsPerBox * this.pillsPerStrip;
+  if (pillsPerBox > 0) {
+    return this.dailyConsumption.map((pills: number) => Math.ceil(pills / pillsPerBox));
+  }
+
+  return Array(this.dailyConsumption.length).fill(0);
+});
+
 const Drug: Model<IDrug> = models.Drug || model<IDrug>('Drug', DrugSchema);
 export default Drug; 

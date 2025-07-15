@@ -30,7 +30,7 @@ export type Screening = {
   parasites?: boolean;
   DM?: boolean;
   diabetes?: boolean;
-  diabetic?: boolean;
+  knownDiabetic?: boolean;
   nonDiabetic?: boolean;
 };
 

@@ -64,7 +64,7 @@ const ScreeningSchema: Schema<Screening> = new Schema(
     rickets: { type: Boolean, default: false },
     parasites: { type: Boolean, default: false },
     diabetes: { type: Boolean, default: false },
-    diabetic: { type: Boolean, default: false },
+    knownDiabetic: { type: Boolean, default: false },
     nonDiabetic: { type: Boolean, default: false },
   },
   { _id: false }

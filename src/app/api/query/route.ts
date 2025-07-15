@@ -1,3 +1,4 @@
+import { connectDB } from '@/lib/db';
 import {
   getQueryResults,
   getCollectionSchema,
@@ -7,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
+    await connectDB();
     const { collectionName, filters, fields, aggregation, groupBy } =
       await req.json();
     if (!collectionName) {
@@ -30,6 +32,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    await connectDB();
     const url = new URL(req.url);
     const collectionName = url.searchParams.get('collection');
 
@@ -41,6 +44,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(collections);
     }
   } catch (error: any) {
+    console.log("error", error);
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 } 

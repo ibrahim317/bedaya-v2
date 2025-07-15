@@ -57,8 +57,8 @@ const LabsPage = () => {
       try {
         const dashboardStats = await getDashboardStats();
         setStats({
-          labTotalIn: dashboardStats.labTotalIn,
-          labTotalOut: dashboardStats.labTotalOut,
+          labTotalIn: dashboardStats.labTotals[PatientType.Adult].labTotalIn + dashboardStats.labTotals[PatientType.Child].labTotalIn,
+          labTotalOut: dashboardStats.labTotals[PatientType.Adult].labTotalOut + dashboardStats.labTotals[PatientType.Child].labTotalOut,
         });
       } catch (error) {
         message.error("Failed to fetch lab stats");
@@ -280,7 +280,7 @@ const LabsPage = () => {
     },
     {
       title: "Overall Status",
-      key: "overallStatus",
+      key: "overAllLabsStatus",
       width: "10%",
       render: (record: IPatient) => {
         const hasCheckedInLab = record.labTest?.some(

@@ -40,25 +40,47 @@ const QueryBuilderPage = () => {
       return;
     }
 
-    const expandedData = tableData.map((row) => {
-      const newRow: { [key: string]: any } = {};
-      Object.keys(row).forEach((key) => {
-        if (Array.isArray(row[key])) {
-          row[key].forEach((item: any, index: number) => {
-            if (typeof item === 'object' && item !== null) {
-              Object.keys(item).forEach((prop) => {
-                newRow[`${key}_${index + 1}_${prop}`] = item[prop];
-              });
-            } else {
-              newRow[`${key}_${index + 1}`] = item;
-            }
-          });
-        } else {
-          newRow[key] = row[key];
+    const flattenRow = (obj: any, prefix = '') => {
+      const result: { [key: string]: any } = {};
+
+      const recurse = (current: any, prop: string) => {
+        if (current === null || current === undefined) {
+          result[prop] = '';
+          return;
         }
-      });
-      return newRow;
-    });
+
+        if (Array.isArray(current)) {
+          if (current.length === 0) {
+            result[prop] = '[]';
+          } else {
+            current.forEach((item, i) => {
+              recurse(item, `${prop}_${i + 1}`);
+            });
+          }
+        } else if (typeof current === 'object') {
+          if (current._bsontype === 'ObjectId' || current._bsontype === 'ObjectID') {
+            result[prop] = current.toString();
+            return;
+          }
+
+          const keys = Object.keys(current);
+          if (keys.length === 0) {
+            result[prop] = '{}';
+          } else {
+            keys.forEach(key => {
+              recurse(current[key], prop ? `${prop}_${key}` : key);
+            });
+          }
+        } else {
+          result[prop] = current;
+        }
+      };
+
+      recurse(obj, prefix);
+      return result;
+    };
+
+    const expandedData = tableData.map((row) => flattenRow(row));
 
     const worksheet = XLSX.utils.json_to_sheet(expandedData);
     const workbook = XLSX.utils.book_new();
@@ -158,10 +180,14 @@ const QueryBuilderPage = () => {
     setTableData(results);
 
     if (results.length > 0) {
+      const fullResultExample = results.reduce((max, current) => {
+        const maxKeys = Object.keys(max).length;
+        const currentKeys = Object.keys(current).length;
+        return currentKeys > maxKeys ? current : max;
+      }, results[0]);
       if (groupBy.length > 0) {
-        const firstResult = results[0];
-        const idKeys = Object.keys(firstResult._id);
-        const otherKeys = Object.keys(firstResult).filter((k) => k !== '_id');
+        const idKeys = Object.keys(fullResultExample._id);
+        const otherKeys = Object.keys(fullResultExample).filter((k) => k !== '_id');
 
         const flattenedData = results.map((row: any, index: number) => {
           const newRow: { [key: string]: any } = { key: index };
@@ -182,7 +208,7 @@ const QueryBuilderPage = () => {
         setTableColumns(newColumns);
         setTableData(flattenedData);
       } else {
-        const columns = Object.keys(results[0]).map((key) => ({
+        const columns = Object.keys(fullResultExample).map((key) => ({
           title: key,
           dataIndex: key,
           key: key,

@@ -33,6 +33,7 @@ export const getQueryResults = async (payload: QueryPayload): Promise<any[]> => 
     body: JSON.stringify(payload),
   });
   if (!response.ok) {
+    console.log("error", response);
     throw new Error('Failed to fetch query results');
   }
   return response.json();

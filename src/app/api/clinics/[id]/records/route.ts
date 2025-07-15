@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { clinicService } from '@/services/clinicService';
 import ClinicVisit from '@/models/main/ClinicVisit';
+import { Patient } from '@/models/main/Patient';
+import Clinic from '@/models/main/Clinic';
 
 export async function POST(
   request: Request,
@@ -18,6 +20,16 @@ export async function POST(
         { status: 400 }
       );
     }
+
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return NextResponse.json({ error: "Patient not found" }, { status: 404 });
+    }
+
+    const clinic = await Clinic.findById(clinicId);
+    if (!clinic) {
+      return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
+    }
     
     // Ensure model is initialized
     await ClinicVisit.find({_id: null});
@@ -25,6 +37,8 @@ export async function POST(
     await clinicService.createClinicVisit({
         patientId,
         clinicId,
+        patientName: patient.name,
+        clinicName: clinic.name,
         diagnoses,
         treatments,
         followUpImages,

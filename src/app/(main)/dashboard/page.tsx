@@ -6,7 +6,7 @@ import { Line, Column, ColumnConfig } from '@ant-design/charts';
 import { getDashboardStats } from '@/clients/dashboard';
 import { clinicsClient, IClinicSummary } from '@/clients/clinicsClient';
 import { DashboardStats } from '@/types/Dashboard';
-import { UserOutlined, MedicineBoxOutlined, HomeOutlined, PlusSquareOutlined, SolutionOutlined, ExperimentOutlined } from '@ant-design/icons';
+import { UserOutlined, MedicineBoxOutlined, HomeOutlined, PlusSquareOutlined, SolutionOutlined, ExperimentOutlined, LoginOutlined, LogoutOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { PatientType, PatientLabTestStatus } from '@/types/Patient';
 
 const { Title, Text } = Typography;
@@ -56,10 +56,32 @@ export default function DashboardPage() {
   const renderLabStats = (patientType: PatientType) => {
     const title = patientType === PatientType.Adult ? "Adult Lab Test Statistics" : "Child Lab Test Statistics";
     const patientStats = stats?.labTestStats[patientType];
+    const labTotals = stats?.labTotals[patientType];
 
     return (
       <div className="mb-8">
         <Title level={3} className="mb-4">{title}</Title>
+        
+        {labTotals && (
+          <Row gutter={[16, 16]} className="mb-6">
+            <Col xs={24} sm={12} md={8}>
+              <Card>
+                <Statistic title="Patients Not Requested (Overall Status)" value={labTotals.labTotalNotRequested} prefix={<QuestionCircleOutlined />} />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Card>
+                <Statistic title="Patients Checked In (Overall Status)" value={labTotals.labTotalIn} prefix={<LoginOutlined />} />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Card>
+                <Statistic title="Patients Checked Out (Overall Status)" value={labTotals.labTotalOut} prefix={<LogoutOutlined />} />
+              </Card>
+            </Col>
+          </Row>
+        )}
+
         {patientStats ? (
           <Row gutter={[16, 16]}>
             {labTestNames.map((labName) => {

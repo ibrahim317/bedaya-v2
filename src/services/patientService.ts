@@ -77,6 +77,7 @@ export const updatePatientLabTest = async (
   const labTestIndex = patient.labTest.findIndex(
     (test: PatientLabTest) => test.labTestName === labTestName
   );
+  console.log("labTestIndex", labTestIndex);
 
   if (labTestIndex > -1) {
     // Update existing lab test
