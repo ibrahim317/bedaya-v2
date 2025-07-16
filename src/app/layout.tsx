@@ -7,6 +7,7 @@ import AntdRegistry from "@/providers/AntdRegistry";
 import ThemeProvider from "@/providers/ThemeProvider";
 import { App as AntApp } from 'antd';
 import QueryProvider from '@/providers/QueryProvider';
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
+      <GoogleAnalytics gaId="G-SL8K5VHVEJ" />
         <AntdRegistry>
           <ThemeProvider>
             <AuthProvider>
