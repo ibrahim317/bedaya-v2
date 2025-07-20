@@ -32,7 +32,7 @@ const PatientDetails = () => {
       <Row gutter={16} align="middle">
         <Col span={8}>
           <Form.Item label="Age" name="age">
-            <Input type="number" placeholder="Age" />
+            <Input type="text" placeholder="Age" />
           </Form.Item>
         </Col>
         <Col xs={24} md={6}>

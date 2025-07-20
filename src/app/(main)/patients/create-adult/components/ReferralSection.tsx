@@ -49,6 +49,11 @@ const ReferralSection = () => {
           </Form.Item>
         </Col>
         <Col xs={6} sm={4} md={2}>
+          <Form.Item name={["referral", "familyMedicine"]} valuePropName="checked">
+            <Checkbox>Family Medicine</Checkbox>
+          </Form.Item>
+        </Col>
+        <Col xs={6} sm={4} md={2}>
           <Form.Item name={["referral", "dental"]} valuePropName="checked">
             <Checkbox>Dental</Checkbox>
           </Form.Item>

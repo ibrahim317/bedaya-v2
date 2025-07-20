@@ -303,6 +303,7 @@ const ReferralOfConvoyClinicSchema: Schema<ReferralOfConvoyClinic> = new Schema(
     goHome: { type: Boolean, default: false },
     pediatric: { type: Boolean, default: false },
     radiology: { type: Boolean, default: false },
+    familyMedicine: { type: Boolean, default: false },
     other: { type: String },
   },
   { _id: false }
@@ -401,7 +402,7 @@ const PatientSchema: Schema<IPatient> = new Schema(
     },
     name: { type: String, index: true },
     sex: { type: String, default: "" },
-    age: { type: Number, default: 0 },
+    age: { type: String, default: "" },
     houseNumber: { type: String, default: "" },
     mobileNumber: { type: String, default: "", index: true },
     code: { type: String, index: true },
@@ -423,7 +424,7 @@ const PatientSchema: Schema<IPatient> = new Schema(
     adultAnthropometry: { type: AdultAnthropometrySchema },
     contraceptionMethod: { type: ContraceptionSchema },
     numberOfChildren: { type: Number },
-    ageOfYoungestChild: { type: Number },
+    ageOfYoungestChild: { type: String },
 
 
 

@@ -208,6 +208,7 @@ export type ReferralOfConvoyClinic = {
   goHome: boolean;
   pediatric: boolean;
   radiology: boolean;
+  familyMedicine: boolean;
   other?: string;
 };
 // ------------- Child Specific Info -------------

@@ -31,7 +31,7 @@ const PatientDetails = () => {
         </Col>
         <Col>
           <Form.Item label="Age" name="age">
-            <Input type="number" placeholder="Enter age" />
+            <Input type="text" placeholder="Enter age" />
           </Form.Item>
         </Col>
         <Col>
@@ -72,7 +72,7 @@ const PatientDetails = () => {
         </Col>
         <Col>
           <Form.Item label="Age of Youngest Child" name="ageOfYoungestChild">
-            <Input type="number" placeholder="Enter age of youngest child" />
+            <Input type="text" placeholder="Enter age of youngest child" />
           </Form.Item>
         </Col>
       </Row>
