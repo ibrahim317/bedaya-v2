@@ -68,7 +68,6 @@ const AdultPatientForm = ({
         {onFinishAndCreateNext && (
           <Button
             type="default"
-            htmlType="submit"
             size="large"
             loading={loading}
             onClick={() => onFinishAndCreateNext(usedForm.getFieldsValue())}
