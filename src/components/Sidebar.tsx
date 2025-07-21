@@ -23,7 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const sidebarContent = (
     <>
-      <Link href="/" className="flex justify-center items-center p-2 border-b border-gray-200">
+      <Link href="/" className="flex justify-center items-center p-2 border-b border-gray-200 z-10">
         <Image
           src="/logo.png"
           alt="Bedaya Logo"
@@ -55,7 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <Sider
       width={200}
-      className="bg-white"
+      className="bg-white z-10"
       collapsible
       collapsed={collapsed}
       breakpoint="md"

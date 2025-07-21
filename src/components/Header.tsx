@@ -27,7 +27,7 @@ export default function HeaderComponent({
   const showBackButton = !rootPages.some(page => pathname === page);
 
   return (
-    <header className="bg-white p-0 flex justify-between items-center shadow-md">
+    <header className="bg-white z-10 p-0 flex justify-between items-center shadow-md">
       <div className="flex items-center">
         <Button
           type="text"
