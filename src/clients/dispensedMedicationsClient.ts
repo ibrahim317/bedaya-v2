@@ -15,7 +15,7 @@ export const dispensedMedicationsClient = {
     return response.json();
   },
 
-  async create(data: DispensedMedicationData): Promise<IDispensedMedication> {
+  async create(data: Omit<DispensedMedicationData, 'patientName'>): Promise<IDispensedMedication> {
     return await fetchJson<IDispensedMedication>('/api/dispensed-medications', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -31,7 +31,7 @@ export const dispensedMedicationsClient = {
       method: 'DELETE',
     });
   },
-  async update(id: string, data: DispensedMedicationData): Promise<IDispensedMedication> {
+  async update(id: string, data: Omit<DispensedMedicationData, 'patientName'>): Promise<IDispensedMedication> {
     return await fetchJson<IDispensedMedication>(`/api/dispensed-medications/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),

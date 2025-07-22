@@ -111,7 +111,8 @@ export default function DispenseTreatmentPage() {
 
       await dispensedMedicationsClient.create(submissionData);
       message.success("Treatment dispensed successfully!");
-      router.push("/pharmacy/dispense");
+      await refreshMedicationHistory();
+      form.setFieldsValue({ medications: [{}] });
     } catch (error) {
       message.error(
         error instanceof Error ? error.message : "Failed to dispense treatment"
@@ -289,8 +290,16 @@ export default function DispenseTreatmentPage() {
       { title: "Drug Name", dataIndex: ["drug", "name"], key: "drugName" },
       { title: "Quantity", dataIndex: "quantity", key: "quantity" },
       { title: "Unit", dataIndex: "quantityType", key: "quantityType" },
-      { title: "Remaining Qty", dataIndex: "remainingQuantity", key: "remainingQuantity" },
-      { title: "Remaining Unit", dataIndex: "remainingUnit", key: "remainingUnit" },
+      {
+        title: "Remaining Qty",
+        dataIndex: "remainingQuantity",
+        key: "remainingQuantity",
+      },
+      {
+        title: "Remaining Unit",
+        dataIndex: "remainingUnit",
+        key: "remainingUnit",
+      },
     ];
 
     return (

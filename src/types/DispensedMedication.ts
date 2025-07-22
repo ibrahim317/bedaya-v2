@@ -41,6 +41,7 @@ export interface IPopulatedDispensedMedication extends Omit<IDispensedMedication
 
 export type DispensedMedicationData = {
     patientId: string;
+    patientName: string;
     medications: {
       drug: {
         name: string;

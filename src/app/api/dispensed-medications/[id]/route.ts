@@ -28,9 +28,7 @@ export async function PUT(request: Request, { params }: Params) {
         !med.drug.barcode ||
         !med.drug.expiryDate ||
         !med.quantity ||
-        !med.quantityType ||
-        !med.remainingQuantity ||
-        !med.remainingUnit
+        !med.quantityType
       ) {
         return NextResponse.json({ message: 'Invalid medication data provided' }, { status: 400 });
       }

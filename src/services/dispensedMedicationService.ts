@@ -3,15 +3,24 @@ import Drug from '@/models/main/Drug';
 import { IDispensedMedication, DispensedMedicationData, IPopulatedDispensedMedication } from '@/types/DispensedMedication';
 import { connectDB } from '@/lib/db';
 import { IPatient } from '@/types/Patient';
+import { Patient } from '@/models/main/Patient';
 
 export async function createDispensedMedication(
-  data: DispensedMedicationData
+  data: Omit<DispensedMedicationData, 'patientName'>
 ): Promise<IDispensedMedication> {
   await connectDB();
 
   try {
+    const patient = await Patient.findById(data.patientId);
+    if (!patient) {
+      throw new Error(`Patient with id ${data.patientId} not found`);
+    }
+    const dataWithPatientName = {
+      ...data,
+      patientName: patient.name,
+    };
     // Create the dispensed medication record
-    const dispensedMedication = new DispensedMedication(data);
+    const dispensedMedication = new DispensedMedication(dataWithPatientName);
     await dispensedMedication.save();
 
     // Update drug quantities
@@ -61,7 +70,7 @@ export async function getDispensedMedicationsByPatientId(
 
 export async function updateDispensedMedication(
   id: string,
-  data: DispensedMedicationData
+  data: Omit<DispensedMedicationData, 'patientName'>
 ): Promise<IDispensedMedication> {
   await connectDB();
   try {
@@ -70,6 +79,14 @@ export async function updateDispensedMedication(
     if (!existingRecord) {
       throw new Error('Dispensed medication record not found');
     }
+    const patient = await Patient.findById(data.patientId);
+    if (!patient) {
+      throw new Error(`Patient with id ${data.patientId} not found`);
+    }
+    const dataWithPatientName = {
+      ...data,
+      patientName: patient.name,
+    };
 
     // Revert the previous drug quantities
     for (const med of existingRecord.medications) {
@@ -119,7 +136,7 @@ export async function updateDispensedMedication(
     // Update the record
     const updatedRecord = await DispensedMedication.findByIdAndUpdate(
       id,
-      data,
+      dataWithPatientName,
       { new: true }
     );
     
