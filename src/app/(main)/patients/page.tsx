@@ -113,6 +113,14 @@ const PatientListPage = () => {
         sortOrder: sorter.order || "descend",
       },
     }));
+    setPagination((prev) => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        current: pagination.current,
+        pageSize: pagination.pageSize,
+      },
+    }));
   };
 
   const handleSearch = (type: "adult" | "child", value: string) => {
