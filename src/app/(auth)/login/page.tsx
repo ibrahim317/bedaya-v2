@@ -102,6 +102,12 @@ export default function LoginPage() {
             />
           </Form.Item>
 
+          <div className="text-right mb-4">
+            <Link href="/forgot-password" className="text-blue-600 hover:text-blue-800 text-sm">
+              Forgot your password?
+            </Link>
+          </div>
+
           <Form.Item>
             <Button
               type="primary"

@@ -6,6 +6,8 @@ export interface IUser {
   name?: string;
   role: 'admin' | 'user';
   verified: boolean;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
